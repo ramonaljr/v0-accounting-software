@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install -g @context7/mcp-server)",
+      "Bash(pnpm --version)",
+      "Bash(pnpm add -g @modelcontextprotocol/server-playwright)",
+      "Bash(pnpm add -g @upstash/context7-mcp)",
+      "Bash(pnpm add -g chrome-devtools-mcp)",
+      "Bash(pnpm add -g @playwright/mcp)",
+      "Bash(powershell -Command \"New-Item -ItemType Directory -Force -Path $env:APPDATA\\Claude | Out-Null; echo ''Directory ready''\")",
+      "Bash(powershell -Command \"New-Item -ItemType Directory -Force -Path \"\"$env:APPDATA\\Claude\"\" | Out-Null; Write-Host ''Directory created''\")",
+      "Bash(powershell -Command \"[System.Environment]::GetFolderPath(''ApplicationData'') + ''\\Claude\\claude_desktop_config.json''\")",
+      "Bash(git add .claude/ CLAUDE.md docs/)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
