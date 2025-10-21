@@ -1,103 +1,276 @@
-import Image from "next/image";
+"use client"
+import { useState, useEffect } from "react"
+import Hero from "@/components/landing/hero"
+import { ProblemStatement } from "@/components/landing/problem-statement"
+import { SolutionOverview } from "@/components/landing/solution-overview"
+import { Features } from "@/components/landing/features"
+import { Pricing } from "@/components/landing/pricing"
+import { Testimonials } from "@/components/landing/testimonials"
+import { FAQ } from "@/components/landing/faq"
+import { FinalCTA } from "@/components/landing/final-cta"
+import { Footer } from "@/components/landing/footer"
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [isScrolled, setIsScrolled] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
+  useEffect(() => {
+    const root = window.document.documentElement
+    root.classList.remove("dark", "system")
+    root.classList.add("light")
+  }, [])
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 100)
+    }
+
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
+
+  const handleMobileNavClick = (elementId: string) => {
+    setIsMobileMenuOpen(false)
+    setTimeout(() => {
+      const element = document.getElementById(elementId)
+      if (element) {
+        const headerOffset = 120
+        const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
+        const offsetPosition = elementPosition - headerOffset
+
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: "smooth",
+        })
+      }
+    }, 100)
+  }
+
+  return (
+    <div className="min-h-screen w-full relative bg-white">
+      {/* Subtle Background Pattern */}
+      <div
+        className="absolute inset-0 z-0"
+        style={{
+          background: "radial-gradient(ellipse 50% 35% at 50% 0%, rgba(212, 175, 55, 0.05), transparent 60%), #ffffff",
+        }}
+      />
+
+      {/* Desktop Header */}
+      <header
+        className={`sticky top-4 z-[9999] mx-auto hidden w-full flex-row items-center justify-between self-start rounded-full bg-white/90 md:flex backdrop-blur-sm border border-gray-200 shadow-lg transition-all duration-300 ${
+          isScrolled ? "max-w-3xl px-2" : "max-w-5xl px-4"
+        } py-2`}
+        style={{
+          willChange: "transform",
+          transform: "translateZ(0)",
+          backfaceVisibility: "hidden",
+          perspective: "1000px",
+        }}
+      >
+        <div
+          className={`z-50 flex items-center justify-center gap-2 transition-all duration-300 ${
+            isScrolled ? "ml-4" : ""
+          }`}
+        >
+          <div className="text-2xl font-bold text-[#D4AF37]">OpportunityOS</div>
+        </div>
+
+        <div className="absolute inset-0 hidden flex-1 flex-row items-center justify-center space-x-2 text-sm font-medium text-muted-foreground transition duration-200 hover:text-foreground md:flex md:space-x-2">
           <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            className="relative px-4 py-2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            onClick={(e) => {
+              e.preventDefault()
+              const element = document.getElementById("features")
+              if (element) {
+                const headerOffset = 120
+                const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
+                const offsetPosition = elementPosition - headerOffset
+
+                window.scrollTo({
+                  top: offsetPosition,
+                  behavior: "smooth",
+                })
+              }
+            }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
+            <span className="relative z-20">Features</span>
           </a>
           <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            className="relative px-4 py-2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            onClick={(e) => {
+              e.preventDefault()
+              const element = document.getElementById("pricing")
+              if (element) {
+                const headerOffset = 120
+                const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
+                const offsetPosition = elementPosition - headerOffset
+
+                window.scrollTo({
+                  top: offsetPosition,
+                  behavior: "smooth",
+                })
+              }
+            }}
           >
-            Read our docs
+            <span className="relative z-20">Pricing</span>
+          </a>
+          <a
+            className="relative px-4 py-2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            onClick={(e) => {
+              e.preventDefault()
+              const element = document.getElementById("testimonials")
+              if (element) {
+                const headerOffset = 120
+                const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
+                const offsetPosition = elementPosition - headerOffset
+
+                window.scrollTo({
+                  top: offsetPosition,
+                  behavior: "smooth",
+                })
+              }
+            }}
+          >
+            <span className="relative z-20">Testimonials</span>
+          </a>
+          <a
+            className="relative px-4 py-2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            onClick={(e) => {
+              e.preventDefault()
+              const element = document.getElementById("faq")
+              if (element) {
+                const headerOffset = 120
+                const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
+                const offsetPosition = elementPosition - headerOffset
+
+                window.scrollTo({
+                  top: offsetPosition,
+                  behavior: "smooth",
+                })
+              }
+            }}
+          >
+            <span className="relative z-20">FAQ</span>
           </a>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+
+        <div className="flex items-center gap-4">
+          <a
+            href="/login"
+            className="font-medium transition-colors hover:text-foreground text-muted-foreground text-sm cursor-pointer"
+          >
+            Log In
+          </a>
+
+          <a
+            href="/signup"
+            className="rounded-md font-bold relative cursor-pointer hover:-translate-y-0.5 transition duration-200 inline-block text-center bg-gradient-to-b from-primary to-primary/80 text-primary-foreground shadow-[0px_2px_0px_0px_rgba(255,255,255,0.3)_inset] px-4 py-2 text-sm"
+          >
+            Sign Up
+          </a>
+        </div>
+      </header>
+
+      {/* Mobile Header */}
+      <header className="sticky top-4 z-[9999] mx-4 flex w-auto flex-row items-center justify-between rounded-full bg-white/90 backdrop-blur-sm border border-gray-200 shadow-lg md:hidden px-4 py-3">
+        <div className="flex items-center justify-center gap-2">
+          <div className="text-lg font-bold text-[#D4AF37]">OpportunityOS</div>
+        </div>
+
+        <button
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="flex items-center justify-center w-10 h-10 rounded-full bg-white/50 border border-gray-200 transition-colors hover:bg-white/80"
+          aria-label="Toggle menu"
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          <div className="flex flex-col items-center justify-center w-5 h-5 space-y-1">
+            <span
+              className={`block w-4 h-0.5 bg-gray-900 transition-all duration-300 ${isMobileMenuOpen ? "rotate-45 translate-y-1.5" : ""}`}
+            ></span>
+            <span
+              className={`block w-4 h-0.5 bg-gray-900 transition-all duration-300 ${isMobileMenuOpen ? "opacity-0" : ""}`}
+            ></span>
+            <span
+              className={`block w-4 h-0.5 bg-gray-900 transition-all duration-300 ${isMobileMenuOpen ? "-rotate-45 -translate-y-1.5" : ""}`}
+            ></span>
+          </div>
+        </button>
+      </header>
+
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-[9998] bg-black/50 backdrop-blur-sm md:hidden">
+          <div className="absolute top-20 left-4 right-4 bg-white/95 backdrop-blur-md border border-gray-200 rounded-2xl shadow-2xl p-6">
+            <nav className="flex flex-col space-y-4">
+              <button
+                onClick={() => handleMobileNavClick("features")}
+                className="text-left px-4 py-3 text-lg font-medium text-gray-600 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-50"
+              >
+                Features
+              </button>
+              <button
+                onClick={() => handleMobileNavClick("pricing")}
+                className="text-left px-4 py-3 text-lg font-medium text-gray-600 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-50"
+              >
+                Pricing
+              </button>
+              <button
+                onClick={() => handleMobileNavClick("testimonials")}
+                className="text-left px-4 py-3 text-lg font-medium text-gray-600 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-50"
+              >
+                Testimonials
+              </button>
+              <button
+                onClick={() => handleMobileNavClick("faq")}
+                className="text-left px-4 py-3 text-lg font-medium text-gray-600 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-50"
+              >
+                FAQ
+              </button>
+              <div className="border-t border-gray-200 pt-4 mt-4 flex flex-col space-y-3">
+                <a
+                  href="/login"
+                  className="px-4 py-3 text-lg font-medium text-gray-600 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-50 cursor-pointer"
+                >
+                  Log In
+                </a>
+                <a
+                  href="/signup"
+                  className="px-4 py-3 text-lg font-bold text-center bg-gradient-to-b from-primary to-primary/80 text-primary-foreground rounded-lg shadow-lg hover:-translate-y-0.5 transition-all duration-200"
+                >
+                  Sign Up
+                </a>
+              </div>
+            </nav>
+          </div>
+        </div>
+      )}
+
+      {/* Hero Section */}
+      <Hero />
+
+      {/* Problem Statement Section */}
+      <ProblemStatement />
+
+      {/* Solution Overview Section - AI Agents */}
+      <SolutionOverview />
+
+      {/* Features Section */}
+      <Features />
+
+      {/* Pricing Section */}
+      <Pricing />
+
+      {/* Testimonials Section */}
+      <Testimonials />
+
+      {/* FAQ Section */}
+      <FAQ />
+
+      {/* Final CTA Section */}
+      <FinalCTA />
+
+      {/* Footer */}
+      <Footer />
     </div>
-  );
+  )
 }

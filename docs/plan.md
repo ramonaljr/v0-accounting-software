@@ -8,7 +8,7 @@ A concise, execution-ready plan to build a next-generation, AI-powered accountin
 
 ## 0) North Star
 
-**Vision:** Accounting that runs itselfâ€”autonomous reconciliation, explainable insights, and global compliance out of the box.  
+**Vision:** Accounting that runs itself—autonomous reconciliation, explainable insights, and global compliance out of the box.  
 **Primary KPI (12 months):** â‰¥85% of transactions fully automated (no human touch) with â‰¥98% accuracy across 100+ jurisdictions.
 
 ---
@@ -52,15 +52,15 @@ A concise, execution-ready plan to build a next-generation, AI-powered accountin
 
 ---
 
-## 4) Milestones & Timeline (Weeks 0â€“12)
+## 4) Milestones & Timeline (Weeks 0–12)
 
-- **W0â€“1:** Finalize PRD, data model, risk & compliance checklist, design system (Untitled UI + brand).
-- **W2â€“3:** Auth, orgs/tenants, COA, ledger CRUD, file storage, OCR pipeline.
-- **W4â€“5:** Bank feeds (Plaid/Wise), ingestion queues, reconciliation baseline, reports v1.
-- **W6â€“7:** AI Co-Pilot (intent â†’ action), LedgerBot v1 (categorization), ReconAI v1 (one-click).
-- **W8:** Multi-currency & regional tax presets; importers (CSV + QBO starter).
-- **W9:** Integrations gallery v1 (Stripe/PayPal/Shopify read-only), accountant workspace.
-- **W10:** Observability, rate limits, RBAC, audit logs; beta hardening.
+- **W0–1:** Finalize PRD, data model, risk & compliance checklist, design system (Untitled UI + brand).
+- **W2–3:** Auth, orgs/tenants, COA, ledger CRUD, file storage, OCR pipeline.
+- **W4–5:** Bank feeds (Plaid/Wise), ingestion queues, reconciliation baseline, reports v1. Add QBO-style Bank Transactions UI, Rules, Receipts Inbox, Reconcile, Bank Deposits, Recurring, Account Register.
+- **W6–7:** AI Co-Pilot (intent + action), LedgerBot v1 (categorization), ReconAI v1 (one-click). Workflows Center (templates for reminders, bill due, low cash, deposit reminder).
+- **W8:** Multi-currency & regional tax presets; importers (CSV + QBO starter); Customers/Vendors hubs; Sales Transactions list.
+- **W9:** Sales pages parity (Invoices, Estimates, Receive payments, Sales receipts, Credit memos, Refund receipts, Payment links, Products & Services import). Purchases parity (Bills, Bill payments, Expenses, POs, Checks). Accountant workspace.
+- **W10:** Reports Center; Class/Location/Tags report presets; Statements & Collections Center; Payroll connector (Gusto) with mapping UI and journal posting. Observability, rate limits, RBAC, audit logs; beta hardening.
 - **W11:** Beta with 10 accountants/100 SMBs; fix high-severity issues.
 - **W12:** Public launch prep: pricing, docs, GTM assets, SLOs, on-call, rollback runbook.
 
@@ -100,6 +100,12 @@ A concise, execution-ready plan to build a next-generation, AI-powered accountin
 
 **Agents & Triggers**
 - **LedgerBot:** on ingestion â†’ propose GL code + tax; auto-post â‰¥0.9 confidence.
+
+- **LedgerBot:** on ingestion + propose GL code + tax; auto-post =0.9 confidence; “Why?” explanations.
+- **ReconAI:** nightly & on-demand; one-click auto-match; reconcile report & history.
+- **Module agents:** Banking (TransferDetector, PaymentMatcher, RuleSuggester), Sales (DunningAgent, PaymentPredictor, EstimateFollowUp, SalesReceiptClassifier), Purchases (BillOCR, DueSoonNotifier, DuplicateBillDetector, POToBillRecommender), Tax (TaxCodeResolver, TaxDueForecaster, ReturnPreparer), Cash/Forecast (CashFlowPlanner, CashAlertAgent), Insights (AnomalyDetector, NarrativeGenerator).
+- **Workflows Center:** templates for invoice reminder/paid, estimate follow-up, bill due, low cash, bank deposit reminder, unbilled time, recurring sales receipt. Triggers: time/event/threshold/data-change; actions: notify, create task, create/send doc, schedule payment, guarded JE, run&email report.
+
 - **ReconAI:** nightly & on-demand â†’ match bank â†” ledger; surface mismatches; 1-click approve.
 - **InsightAI:** continuous â†’ anomalies, duplicate detection, unusual vendors, cash alerts.
 - **ReportGen:** on request/schedule â†’ P&L/BS/CF; narrative summary + links to entries.

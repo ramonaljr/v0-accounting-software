@@ -13,7 +13,7 @@
 
 OpportunityOS is a mobile-first, AI-powered accounting platform for SMBs, accountants, and global startups. It replaces rules-only automations with **agentic workflows** that reconcile, categorize, and report with human-in-the-loop oversight. Core advantages: autonomous reconciliation, explainable actions, multi-currency + tax intelligence, and developer-friendly integrations.
 
-**Primary Launch Goal:** Ship an MVP that automates ≥85% of day-to-day bookkeeping with ≥98% accuracy across initial regions (US, EU, PH, JP), while demonstrating reliable bank feeds and one-click reconciliation.
+**Primary Launch Goal:** Ship an MVP that automates =85% of day-to-day bookkeeping with =98% accuracy across initial regions (US, EU, PH, JP), while demonstrating reliable bank feeds and one-click reconciliation. The default dashboard mirrors the industry-standard QuickBooks Online (Business overview) layout and terminology for familiarity and reduced training time.
 
 ---
 
@@ -100,6 +100,9 @@ Deliver **true workflow automation** (agentic reconciliation, anomaly detection,
 - Approvals workflow, journal lock/close
 - Report builder (custom columns, groupings)
 - QBO/Xero importer deepening
+- Parity for QBO-style hubs and lists (Customers/Vendors, Sales Transactions, Bills/Bill payments, Bank Transactions UI, Rules, Receipts Inbox, Reconcile, Bank Deposits, Recurring, Account Register)
+- Projects, Tags, Classes/Locations, Customer Statements & Collections Center
+- Payroll connectors (Gusto read-only with journal posting)
 
 ### 5.3 Out-of-Scope (MVP)
 
@@ -122,6 +125,15 @@ Deliver **true workflow automation** (agentic reconciliation, anomaly detection,
 - Connect accounts; nightly + on-demand sync; webhooks
 - Idempotent ingestion; de-duplication; retry on failure; **clear error surfacing**
 - Feed health metrics per account (lag, errors, last sync)
+  
+#### 6.2.1 Bank UX (QBO-style)
+- Bank Transactions UI: tabs (For review, Categorized, Excluded); row actions (Add, Match, Split, Transfer, Exclude); batch accept; filters; side-panel "Create rule from this"
+- Rules: list with priority and on/off; rule editor with conditions builder; import/export CSV template
+- Receipts Inbox: upload/email-in/capture; OCR; match to transactions; create expense/bill; archive
+- Reconcile UI: start screen, two-column list, difference must be zero; history & reports; undo last reconciliation
+- Bank Deposits: select Undeposited funds payments; fees/cash back; deposit slip
+- Recurring transactions: templates for invoices, bills, expenses, checks, journal entries
+- Account Register: per-account register with reconciled flag
 
 ### 6.3 Categorization (**LedgerBot**)
 
@@ -147,12 +159,21 @@ Deliver **true workflow automation** (agentic reconciliation, anomaly detection,
 - Templates; line items; discounts; taxes; multi-currency
 - Payment links (Stripe/PayPal); auto-match receipts
 - Dunning emails; **predictive reminder schedule**
+  
+#### 6.6.1 Sales UX (QBO-style)
+- Invoices list KPIs (unsent/overdue/open/paid 30d); quick actions (receive payment, send reminder)
+- Estimates (send/accept/convert), Receive payments (deposit to bank/undeposited funds)
+- Sales receipts, Credit memos, Refund receipts, Payment links
+- Sales Transactions list; Products & Services with CSV import
 
 ### 6.7 Reports
 
 - P&L, BS, CF; filters by period, dimension, currency
 - Drill-down to source entries and attachments
 - Scheduled delivery; CSV/PDF; narrative summary (**ReportGen**)
+  
+#### 6.7.1 Reports Center (QBO-style)
+- Library with favorites and management report packs; presets for Class/Location/Tags reports; drill-down preserved
 
 ### 6.8 AI Co-Pilot
 
@@ -160,11 +181,28 @@ Deliver **true workflow automation** (agentic reconciliation, anomaly detection,
 - Guardrails: RBAC-aware; confirmation for postings; **dry-run previews**
 - Context shortcuts (selected transactions → "Explain" / "Re-classify")
 
-### 6.9 Collaboration & Roles
+
+### 6.9 QBO-style Hubs & Pages
+- Customers/Vendors hubs with KPI strips and quick actions
+- Sales pages: Invoices, Estimates, Receive payments, Sales receipts, Credit memos, Refund receipts, Sales Transactions, Payment links, Products & Services import
+- Purchases pages: Bills, Bill payments, Expenses, Purchase orders, Checks
+- Reports Center presets for Class/Location/Tags; Statements & Collections Center
+- Projects, Mileage, Tags, Classes/Locations
+- Payroll (connectors): Gusto (P1), ADP/Justworks (P2) with journal posting and liabilities
+
+### 6.10 Collaboration & Roles
 
 - Roles: Owner, Admin, Accountant, Staff, Viewer
 - Client switcher for accountants; task assignments; comments
 - Close/lock periods, approval trail; exportable audit pack
+
+### 6.11 Payroll (Connectors)
+- Providers: Gusto (P1), ADP/Justworks (P2); OAuth + webhooks
+- Account mapping UI: wages expense, employer taxes, employee withholdings (liabilities), benefits (employer vs employee), garnishments liabilities; payroll clearing; cash/bank
+- Per-employee allocations: default class/location/department; optional percent splits; validate totals
+- Direct deposit clearing: post to clearing then auto-clear to bank on feed match
+- Reports: Payroll summary; wages by class/location/department; liabilities; benefits/deductions
+
 
 ---
 
@@ -269,6 +307,11 @@ flowchart LR
 **Patterns:** Empty-states with "Try it now"; inline "Why?"; sticky mobile CTA.
 
 **Key Screens:** Dashboard, Transactions, Reconcile, Invoices, Expenses, Reports, Integrations, Settings, Accountant Workspace.
+
+### 12.1 Dashboard (QBO-style preset)
+- Business overview layout (12-col grid): Bank accounts, Invoices owed to you, Profit and loss, Expenses, Sales, Cash flow, Taxes, Get things done, Bills to pay; optional Bill payments tile
+- Tile menus: View report/Customize/Remove; drilldowns; skeleton/async loading
+- Role-based presets and optional modules (Payroll/Mileage/Projects)
 
 ---
 
