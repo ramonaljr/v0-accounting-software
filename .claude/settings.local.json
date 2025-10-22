@@ -5,7 +5,9 @@
       "Bash(git add:*)",
       "Bash(vercel link:*)",
       "Bash(vercel ls:*)",
-      "Bash(vercel project:*)"
+      "Bash(vercel project:*)",
+      "Bash(vercel:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
