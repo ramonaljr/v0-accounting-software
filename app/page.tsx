@@ -76,9 +76,9 @@ export default function Home() {
           <div className="text-2xl font-bold text-[#D4AF37]">OpportunityOS</div>
         </div>
 
-        <div className="absolute inset-0 hidden flex-1 flex-row items-center justify-center space-x-2 text-sm font-medium text-muted-foreground transition duration-200 hover:text-foreground md:flex md:space-x-2">
+        <div className="absolute inset-0 hidden pointer-events-none flex-1 flex-row items-center justify-center space-x-2 text-sm font-medium text-muted-foreground transition duration-200 hover:text-foreground md:flex md:space-x-2">
           <a
-            className="relative px-4 py-2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            className="relative px-4 py-2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer pointer-events-auto"
             onClick={(e) => {
               e.preventDefault()
               const element = document.getElementById("features")
@@ -97,7 +97,7 @@ export default function Home() {
             <span className="relative z-20">Features</span>
           </a>
           <a
-            className="relative px-4 py-2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            className="relative px-4 py-2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer pointer-events-auto"
             onClick={(e) => {
               e.preventDefault()
               const element = document.getElementById("pricing")
@@ -116,7 +116,7 @@ export default function Home() {
             <span className="relative z-20">Pricing</span>
           </a>
           <a
-            className="relative px-4 py-2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            className="relative px-4 py-2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer pointer-events-auto"
             onClick={(e) => {
               e.preventDefault()
               const element = document.getElementById("testimonials")
@@ -135,7 +135,7 @@ export default function Home() {
             <span className="relative z-20">Testimonials</span>
           </a>
           <a
-            className="relative px-4 py-2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            className="relative px-4 py-2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer pointer-events-auto"
             onClick={(e) => {
               e.preventDefault()
               const element = document.getElementById("faq")
@@ -157,8 +157,8 @@ export default function Home() {
 
         <div className="flex items-center gap-4">
           <a
-            href="/login"
-            className="font-medium transition-colors hover:text-foreground text-muted-foreground text-sm cursor-pointer"
+            href="/dashboard"
+            className="font-medium transition-colors hover:text-foreground text-muted-foreground text-sm cursor-pointer pointer-events-auto"
           >
             Log In
           </a>
@@ -228,7 +228,7 @@ export default function Home() {
               </button>
               <div className="border-t border-gray-200 pt-4 mt-4 flex flex-col space-y-3">
                 <a
-                  href="/login"
+                  href="/dashboard"
                   className="px-4 py-3 text-lg font-medium text-gray-600 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-50 cursor-pointer"
                 >
                   Log In

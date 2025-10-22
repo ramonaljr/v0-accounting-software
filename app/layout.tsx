@@ -1,13 +1,15 @@
-import type React from "react"
-import type { Metadata } from "next"
-import { GeistSans } from "geist/font/sans"
-import { GeistMono } from "geist/font/mono"
-import "./globals.css"
+import type React from 'react'
+import type { Metadata } from 'next'
+import { GeistSans } from 'geist/font/sans'
+import { GeistMono } from 'geist/font/mono'
+import { ThemeProvider } from '@/components/theme-provider'
+import './globals.css'
 
 export const metadata: Metadata = {
-  title: "OpportunityOS - Accounting that runs itself",
-  description: "Autonomous reconciliation, explainable insights, and global compliance out of the box. AI-powered accounting SaaS platform.",
-  generator: "Next.js",
+  title: 'OpportunityOS - Accounting that runs itself',
+  description:
+    'Autonomous reconciliation, explainable insights, and global compliance out of the box. AI-powered accounting SaaS platform.',
+  generator: 'Next.js',
 }
 
 export default function RootLayout({
@@ -16,7 +18,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <style>{`
 html {
@@ -26,7 +28,16 @@ html {
 }
         `}</style>
       </head>
-      <body className="dark">{children}</body>
+      <body>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+        </ThemeProvider>
+      </body>
     </html>
   )
 }

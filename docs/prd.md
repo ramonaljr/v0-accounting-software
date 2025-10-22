@@ -108,6 +108,7 @@ Deliver **true workflow automation** (agentic reconciliation, anomaly detection,
 
 - Full payroll engine (connectors only)
 - Advanced inventory/warehousing
+- Bank vs Books variance: drill from Bank accounts tile to current Reconcile session or to Recon exceptions for the account/period
 - All jurisdictions e-filing (focus pilot regions first)
 
 ---
@@ -284,6 +285,10 @@ flowchart LR
 - Drift detection on classification distributions
 - Rollback to last good model if accuracy drops > 1.5 pp
 
+### 10.4 Safe Mode & AI Health
+- Per‑agent and per‑tenant kill switch with audit; canary cohorts for auto‑post
+- AI Health dashboard: auto‑post coverage, false‑pos/neg, rule vs AI mix, drift status, model versions; alerts on thresholds
+
 ---
 
 ## 11) Integrations (Phase 1 Targets)
@@ -312,6 +317,8 @@ flowchart LR
 - Business overview layout (12-col grid): Bank accounts, Invoices owed to you, Profit and loss, Expenses, Sales, Cash flow, Taxes, Get things done, Bills to pay; optional Bill payments tile
 - Tile menus: View report/Customize/Remove; drilldowns; skeleton/async loading
 - Role-based presets and optional modules (Payroll/Mileage/Projects)
+ - Presets: `default_qbo` (exact QBO tiles/order) and `qbo_plus` (default + additional tiles like To deposit, Unbilled, Collections, Inventory health, Payroll tasks, Favorites, KPIs, AI insights, At‑risk, Setup/CTA/Tips)
+ - Mobile patterns: KPI strips collapse to chips; tiles stack 1‑column; sticky "Get things done" CTA; charts lazy‑load in viewport
 
 ---
 
@@ -413,6 +420,18 @@ POST /api/v1/copilot/command   // intent->action with dry-run preview
 - Security review passed; runbooks and dashboards live
 - Beta satisfaction ≥ 8/10; critical bugs resolved
 
+### 21) IFRS/GAAP Compliance (Summary)
+- COA templates for IFRS and US GAAP; opening balances import (debits=credits)
+- Financial statements: P&L, Balance Sheet, Cash Flow (Indirect) with IFRS/US GAAP line mappings
+- Trial Balance with balance validation; Statement of Changes in Equity (P1)
+- Basis toggle (accrual/cash) propagated to dashboard and reports
+- Multi-currency (IAS 21): revaluation entries; presentation-currency translation (P1)
+- Bank reconciliation: difference must be zero; history & immutable reports
+- Accruals, prepayments, deferred revenue (P1), auto-reversing entries
+- Period close: lock/reopen with audit; retained earnings roll-forward; audit pack
+- Audit controls: immutable logs and explainability; approvals
+
+
 ---
 
 ## 21) Open Questions
@@ -441,3 +460,25 @@ POST /api/v1/copilot/command   // intent->action with dry-run preview
 - **2025-10-06:** Regions at GA (US/EU/PH/JP)
 - **2025-10-06:** Autopost confidence threshold = 0.90 (canary first)
 - **2025-10-06:** Plaid + Wise as phase-1 feeds
+
+### 6.13 AR/AP Enhancements (Scope Notes)
+- AR: credit limits/holds, auto write-off thresholds, cash application rules; Statements & Collections Center; dunning schedules
+- AP: multi-step approvals, three-way match (PO�receipt�bill), early-payment discounts, payment runs & remittance advice, AP holds
+- Acceptance: AR/AP aging reports tie to GL control accounts; audit trails for holds/approvals/cash application
+
+### 6.14 Inventory (P2) � Accounting Notes
+- Perpetual inventory; item costing supports Avg and FIFO
+- Landed cost capitalization (freight/duties) allocated by qty/weight/value
+- COGS roll-forward: Beg Inv + Purchases (net returns/allowances/discounts) + Freight-in � Adjustments - End Inv = COGS
+- Inventory valuation & COGS report ties to P&L COGS and BS inventory; FIFO uses layers; Avg uses weighted average
+- Multi-currency: purchases translated at transaction rate; inventory is non-monetary (no revaluation); FIFO layers retain historical rates
+- Acceptance: roll-forward and valuation tie to GL; variances flagged
+
+### 6.15 Financial Analysis & Charts (P1)
+- Common-size statements: P&L as % of revenue; Balance Sheet as % of total assets/equity
+- Ratio dashboards: Current/Quick, Debt/Equity, Inventory/AR/AP turns, DOH/DSO/DPO, Gross/Operating/Net margins, ROA/ROE
+- Variance analysis: Prior vs Current; Budget vs Actual; waterfall drivers; Class/Location/Tag variances
+- Trends & seasonality: rolling 12-month charts; forecast overlays & confidence bands
+- Heatmaps & cohorts: expense category heatmap; customer revenue cohorts/retention
+- Scenario manager: best/base/worst; target tracking
+- Acceptance: ratios and common-size computed from report totals with identical filters; variance math correct; charts performant and accessible

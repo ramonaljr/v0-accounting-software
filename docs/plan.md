@@ -226,3 +226,30 @@ A concise, execution-ready plan to build a next-generation, AI-powered accountin
 - Final **trial/paid** conversion rules and usage limits for AI features.
 
 ---
+
+## IFRS/GAAP Compliance Checklist (Plan)
+- Create and maintain a crosswalk mapping (IFRS vs US GAAP) to report lines and dashboards
+- Verify TB ties to BS/P&L; Assets=Liabilities+Equity; basis and periods consistent
+- Verify bank reconciliation difference=0 with history & immutable report
+- Validate FX revaluation entries and (P1) presentation-currency translation
+- Validate accruals/prepayments/deferrals and auto-reversing entries
+- Validate period close: retained earnings roll-forward; close/reopen with audit pack
+- Validate tax liabilities tie to GL; returns and attachments retained
+- Gate GA on passing the above and on dashboard?report tie-outs per formulas appendix
+
+
+## Navigation & Dashboard Presets
+- Implement QuickBooks-style left navigation; add secondary "My apps" sidebar with module list (Accounting ? Business Tax)
+- Add dashboard presets: `default_qbo` and `qbo_plus`; document mobile patterns
+
+## P2 Enhancements (Inventory, Fixed Assets, AR/AP)
+- Inventory: add FIFO costing; landed cost allocation; locations & counts; serial/lot (P3); valuation/turnover/DOH reports
+- Fixed Assets: dual books; revaluation & impairment; componentization; disposal workflow with JE preview
+- AR: credit limits/holds; auto write-off policy; cash application rules
+- AP: approvals; 3-way match; early-pay discounts; payment runs & remittance; AP holds
+
+- Add Inventory Valuation & COGS report (P2) with roll-forward tie-outs to P&L/BS; implement Avg + FIFO costing and landed-cost allocation
+
+## Financial Analysis & Charts (P1)
+- Deliver dashboards: ratios (Current/Quick, Debt/Equity, Turns/DOH/DSO/DPO, margins, ROA/ROE), common-size P&L/BS, variance (prior vs current; budget vs actual with waterfall), rolling-12 with forecast overlays, heatmaps (expenses), cohorts (customers), scenario manager
+- Acceptance: all metrics tie to report totals with same filters/basis/currency; performance P95 < 2s/tile; exports/drill-downs validated
