@@ -25,8 +25,8 @@ export interface UserOrgContext {
  * @returns User organization context or null if not found
  */
 export async function getCurrentOrg(): Promise<UserOrgContext | null> {
-  // DEVELOPMENT MODE: Return mock context if not in production
-  if (process.env.NODE_ENV === 'development' && process.env.BYPASS_AUTH === 'true') {
+  // BYPASS MODE: Return mock context if BYPASS_AUTH is enabled
+  if (process.env.BYPASS_AUTH === 'true') {
     // Use valid UUID format for development to avoid database type errors
     const devOrgId = '00000000-0000-0000-0000-000000000001';
     const devUserId = '00000000-0000-0000-0000-000000000002';

@@ -310,8 +310,8 @@ export async function generateARAgingReport() {
 
 export async function getDashboardMetrics() {
   try {
-    // DEVELOPMENT MODE: Return mock data if bypass is enabled
-    if (process.env.NODE_ENV === 'development' && process.env.BYPASS_AUTH === 'true') {
+    // BYPASS MODE: Return mock data if bypass is enabled
+    if (process.env.BYPASS_AUTH === 'true') {
       return {
         success: true,
         data: {

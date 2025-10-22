@@ -16,8 +16,8 @@ export async function getDashboardMetrics(
   filters?: Partial<DashboardFilters>
 ): Promise<{ success: boolean; data?: DashboardMetrics; error?: string }> {
   try {
-    // DEVELOPMENT MODE: Return comprehensive mock data
-    if (process.env.NODE_ENV === 'development' && process.env.BYPASS_AUTH === 'true') {
+    // BYPASS MODE: Return comprehensive mock data
+    if (process.env.BYPASS_AUTH === 'true') {
       return {
         success: true,
         data: getMockDashboardMetrics(filters),

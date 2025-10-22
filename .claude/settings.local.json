@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Bash(pnpm build:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(vercel link:*)",
+      "Bash(vercel ls:*)",
+      "Bash(vercel project:*)"
     ],
     "deny": [],
     "ask": []
