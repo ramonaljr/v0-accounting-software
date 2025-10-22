@@ -43,8 +43,9 @@ export interface AccountWithPath extends Account {
 export async function getAccounts(): Promise<Account[]> {
   const context = await requireOrg()
 
-  // BYPASS MODE: Return mock data if bypass is enabled
-  if (process.env.BYPASS_AUTH === 'true') {
+  // TEMPORARY: Always return mock data until auth is properly configured
+  const bypassAuth = true; // Hardcoded for now
+  if (bypassAuth) {
     return [
       {
         id: '1',
