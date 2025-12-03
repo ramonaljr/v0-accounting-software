@@ -1,13 +1,13 @@
 /**
  * Dashboard Status Bars
- * OpportunityOS status bars showing key metrics at a glance
+ * Accunza status bars showing key metrics at a glance
  * Implements Nielsen's Visibility of System Status and Fitts's Law
  */
 
-'use client';
+'use client'
 
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import {
   FileText,
   AlertCircle,
@@ -16,30 +16,30 @@ import {
   TrendingUp,
   TrendingDown,
   ChevronRight,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 export interface StatusBarMetric {
-  label: string;
-  value: string | number;
-  icon?: React.ReactNode;
-  color?: 'gold' | 'success' | 'warning' | 'danger' | 'info';
+  label: string
+  value: string | number
+  icon?: React.ReactNode
+  color?: 'gold' | 'success' | 'warning' | 'danger' | 'info'
   trend?: {
-    direction: 'up' | 'down' | 'neutral';
-    value: string;
-  };
-  badge?: string;
-  link?: string;
-  ariaLabel?: string;
+    direction: 'up' | 'down' | 'neutral'
+    value: string
+  }
+  badge?: string
+  link?: string
+  ariaLabel?: string
 }
 
 interface StatusBarsProps {
-  metrics: StatusBarMetric[];
-  className?: string;
+  metrics: StatusBarMetric[]
+  className?: string
 }
 
 /**
- * Semantic color system aligned with OpportunityOS brand
+ * Semantic color system aligned with Accunza brand
  * Gold = primary/neutral, Success = green, Warning = orange, Danger = red, Info = blue
  */
 const colorMap = {
@@ -73,18 +73,18 @@ const colorMap = {
     bgLight: 'bg-[--info]/10 dark:bg-[--info]/20',
     border: 'border-[--info]/30',
   },
-};
+}
 
 export function StatusBars({ metrics, className }: StatusBarsProps) {
   if (!metrics || metrics.length === 0) {
-    return null;
+    return null
   }
 
   return (
     <div className={cn('grid grid-cols-2 md:grid-cols-4 gap-4 mb-6', className)} role="list">
       {metrics.map((metric, index) => {
-        const colors = colorMap[metric.color || 'gold'];
-        const isClickable = Boolean(metric.link);
+        const colors = colorMap[metric.color || 'gold']
+        const isClickable = Boolean(metric.link)
 
         const cardContent = (
           <>
@@ -96,9 +96,7 @@ export function StatusBars({ metrics, className }: StatusBarsProps) {
                 <div className="flex items-center gap-2">
                   {metric.icon && (
                     <div className={cn('p-2 rounded-lg', colors.bgLight)} aria-hidden="true">
-                      <div className={colors.text}>
-                        {metric.icon}
-                      </div>
+                      <div className={colors.text}>{metric.icon}</div>
                     </div>
                   )}
                   <div>
@@ -116,19 +114,18 @@ export function StatusBars({ metrics, className }: StatusBarsProps) {
 
               <div className="flex items-end justify-between">
                 <div>
-                  <p className="text-2xl font-bold">
-                    {metric.value}
-                  </p>
+                  <p className="text-2xl font-bold">{metric.value}</p>
                 </div>
 
                 {metric.trend && (
-                  <div className={cn(
-                    'flex items-center gap-1 text-xs font-medium',
-                    metric.trend.direction === 'up' && 'text-[--success]',
-                    metric.trend.direction === 'down' && 'text-[--danger]',
-                    metric.trend.direction === 'neutral' && 'text-muted-foreground'
-                  )}
-                  aria-label={`${metric.trend.direction === 'up' ? 'Increased' : metric.trend.direction === 'down' ? 'Decreased' : 'No change'} by ${metric.trend.value}`}
+                  <div
+                    className={cn(
+                      'flex items-center gap-1 text-xs font-medium',
+                      metric.trend.direction === 'up' && 'text-[--success]',
+                      metric.trend.direction === 'down' && 'text-[--danger]',
+                      metric.trend.direction === 'neutral' && 'text-muted-foreground'
+                    )}
+                    aria-label={`${metric.trend.direction === 'up' ? 'Increased' : metric.trend.direction === 'down' ? 'Decreased' : 'No change'} by ${metric.trend.value}`}
                   >
                     {metric.trend.direction === 'up' && (
                       <TrendingUp className="w-3 h-3" aria-hidden="true" />
@@ -150,7 +147,7 @@ export function StatusBars({ metrics, className }: StatusBarsProps) {
               )}
             </div>
           </>
-        );
+        )
 
         return isClickable ? (
           <a
@@ -161,11 +158,11 @@ export function StatusBars({ metrics, className }: StatusBarsProps) {
               'block'
             )}
             role="listitem"
-            aria-label={metric.ariaLabel || `${metric.label}: ${metric.value}. Click to view details.`}
+            aria-label={
+              metric.ariaLabel || `${metric.label}: ${metric.value}. Click to view details.`
+            }
           >
-            <Card className="h-full border-0">
-              {cardContent}
-            </Card>
+            <Card className="h-full border-0">{cardContent}</Card>
           </a>
         ) : (
           <Card
@@ -176,21 +173,21 @@ export function StatusBars({ metrics, className }: StatusBarsProps) {
           >
             {cardContent}
           </Card>
-        );
+        )
       })}
     </div>
-  );
+  )
 }
 
 /**
  * Pre-configured status bar metrics for common use cases
- * Updated with semantic colors aligned to OpportunityOS brand
+ * Updated with semantic colors aligned to Accunza brand
  */
 export function getDefaultStatusBarMetrics(data: {
-  purchaseOrders?: number;
-  overdue?: number;
-  openBills?: number;
-  paidLast30Days?: number;
+  purchaseOrders?: number
+  overdue?: number
+  openBills?: number
+  paidLast30Days?: number
 }): StatusBarMetric[] {
   return [
     {
@@ -226,5 +223,5 @@ export function getDefaultStatusBarMetrics(data: {
       link: '/expenses/bills?filter=paid',
       ariaLabel: `${data.paidLast30Days ?? 0} bills paid in the last 30 days. Click to view paid bills.`,
     },
-  ];
+  ]
 }

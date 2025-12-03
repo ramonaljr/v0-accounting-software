@@ -1,4 +1,4 @@
--- OpportunityOS Phase 2.4 - Multi-Currency Support
+-- Accunza Phase 2.4 - Multi-Currency Support
 -- Migration: Initialize multi-currency and exchange rate management
 -- Created: 2025-10-21
 

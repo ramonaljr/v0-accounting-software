@@ -48,6 +48,11 @@ const envSchema = z.object({
 
   // Analytics
   NEXT_PUBLIC_VERCEL_ANALYTICS_ID: z.string().optional(),
+
+  // ERPNext (Optional - for ERPNext integration)
+  ERPNEXT_BASE_URL: z.string().url().optional(),
+  ERPNEXT_API_KEY: z.string().optional(),
+  ERPNEXT_API_SECRET: z.string().optional(),
 })
 
 /**
@@ -73,4 +78,5 @@ export const features = {
   hasEmail: !!env.SENDGRID_API_KEY,
   hasEncryption: !!env.ENCRYPTION_KEY,
   hasFxRates: !!env.FX_RATES_API_KEY,
+  hasERPNext: !!(env.ERPNEXT_BASE_URL && env.ERPNEXT_API_KEY && env.ERPNEXT_API_SECRET),
 } as const

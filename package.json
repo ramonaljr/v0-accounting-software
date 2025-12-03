@@ -1,5 +1,5 @@
 {
-  "name": "v0-accounting-software",
+  "name": "accunza",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -15,6 +15,8 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
+    "test:erpnext": "node scripts/test-erpnext.mjs",
+    "erpnext:post-je": "node scripts/post-erpnext-je.mjs",
     "prepare": "husky"
   },
   "lint-staged": {

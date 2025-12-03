@@ -1,4 +1,4 @@
--- OpportunityOS Phase 2.1 - Chart of Accounts
+-- Accunza Phase 2.1 - Chart of Accounts
 -- Migration: Initialize Chart of Accounts schema
 -- Created: 2025-10-21
 

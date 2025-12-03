@@ -1,4 +1,4 @@
--- OpportunityOS Phase 2.3 - Bank Feeds Integration
+-- Accunza Phase 2.3 - Bank Feeds Integration
 -- Migration: Initialize Bank Feeds and Transaction Sync schema
 -- Created: 2025-10-21
 

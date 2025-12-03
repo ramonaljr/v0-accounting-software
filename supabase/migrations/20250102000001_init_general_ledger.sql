@@ -1,4 +1,4 @@
--- OpportunityOS Phase 2.2 - General Ledger
+-- Accunza Phase 2.2 - General Ledger
 -- Migration: Initialize General Ledger and Double-Entry Bookkeeping schema
 -- Created: 2025-10-21
 

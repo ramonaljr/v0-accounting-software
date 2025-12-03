@@ -372,7 +372,7 @@ export default function ExpensesPage() {
           <DialogHeader>
             <DialogTitle>Upload Receipt</DialogTitle>
             <DialogDescription>
-              Upload a receipt image or PDF. We'll automatically extract the details using OCR.
+              Upload a receipt image or PDF. We&apos;ll automatically extract the details using OCR.
             </DialogDescription>
           </DialogHeader>
           <div

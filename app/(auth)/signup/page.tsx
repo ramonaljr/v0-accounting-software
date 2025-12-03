@@ -3,8 +3,8 @@ import Link from 'next/link'
 import { SignupForm } from './signup-form'
 
 export const metadata: Metadata = {
-  title: 'Sign Up | OpportunityOS',
-  description: 'Create your OpportunityOS account',
+  title: 'Sign Up | Accunza',
+  description: 'Create your Accunza account',
 }
 
 export default function SignupPage() {
@@ -13,24 +13,17 @@ export default function SignupPage() {
       <div className="w-full max-w-md space-y-8">
         {/* Logo */}
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-[#D4AF37]">OpportunityOS</h1>
-          <p className="mt-2 text-sm text-zinc-400">
-            Accounting that runs itself
-          </p>
+          <h1 className="text-4xl font-bold text-[#D4AF37]">Accunza</h1>
+          <p className="mt-2 text-sm text-zinc-400">Accounting that runs itself</p>
         </div>
 
         {/* Signup Form */}
         <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-8 shadow-lg">
           <div className="mb-6">
-            <h2 className="text-2xl font-semibold text-white">
-              Create your account
-            </h2>
+            <h2 className="text-2xl font-semibold text-white">Create your account</h2>
             <p className="mt-2 text-sm text-zinc-400">
               Already have an account?{' '}
-              <Link
-                href="/login"
-                className="font-medium text-[#D4AF37] hover:text-[#D4AF37]/80"
-              >
+              <Link href="/login" className="font-medium text-[#D4AF37] hover:text-[#D4AF37]/80">
                 Sign in
               </Link>
             </p>

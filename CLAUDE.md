@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Next.js 15.5+ application built with TypeScript, React 19, and Tailwind CSS v4, intended as an **AI-powered accounting SaaS platform (OpportunityOS)**. The project uses the App Router architecture with Turbopack for development and build optimization.
+This is a Next.js 15.5+ application built with TypeScript, React 19, and Tailwind CSS v4, intended as an **AI-powered accounting SaaS platform (Accunza)**. The project uses the App Router architecture with Turbopack for development and build optimization.
 
 **Product Vision:** Accounting that runs itself—autonomous reconciliation, explainable insights, and global compliance out of the box.
 
@@ -47,11 +47,13 @@ The development server runs on http://localhost:3000 by default.
 ## Architecture & Organization
 
 ### Multi-Tenant Design
+
 - **Every data model must include `org_id`** - all queries and mutations must scope by `org_id`
 - Role hierarchy: `owner`, `admin`, `accountant`, `staff`, `viewer` stored in `org_members` table
 - Storage buckets use per-org folder prefixes (e.g., `/org_id/receipts/`, `/org_id/invoices/`)
 
 ### Planned Directory Structure
+
 The project is designed to scale into the following domain-driven structure:
 
 ```
@@ -93,11 +95,13 @@ lib/
 ```
 
 ### Path Aliases
+
 - `@/*` maps to the project root (configured in tsconfig.json)
 
 ## Key Architectural Patterns
 
 ### Supabase Integration
+
 - **Never access Supabase directly in components** - use server actions or API routes
 - Separate server and client environments via `lib/supabase/server.ts` and `lib/supabase/client.ts`
 - **Enable Row Level Security (RLS) on every table** - validate via `auth.uid()` and enforce `org_id` scoping
@@ -105,6 +109,7 @@ lib/
 - Store environment variables in `.env.local` for development
 
 ### Security Requirements
+
 - **Encrypt sensitive financial data**: Bank access tokens, tax IDs, payment gateway credentials
 - **Field-level encryption** for PII and sensitive account information
 - **Audit all sensitive actions**: Journal entry posts, reconciliation approvals, bank connections, data exports, permission changes
@@ -115,39 +120,47 @@ lib/
 - **Immutable audit logs**: append-only table with cryptographic signatures
 
 ### AI Agent Framework
+
 Core AI agents with autonomous workflows under guardrails:
 
 **LedgerBot** - Categorization Agent
+
 - Auto-categorize bank transactions based on merchant, description, amount patterns
 - Confidence threshold: ≥0.90 for auto-post, else queue for review
 - Provide explainable reasoning with source references
 
 **ReconAI** - Reconciliation Agent
+
 - Automated matching: bank ↔ ledger ↔ payments
 - One-click approve for high-confidence matches
 - Handle partial matches and difference posting
 
 **InsightAI** - Anomaly Detection Agent
+
 - Detect unusual amounts, duplicates, vendor changes, category drift
 - Surface alerts with severity levels
 - Notify-only (no autonomous actions)
 
 **ReportGen** - Report Generation Agent
+
 - Generate P&L, Balance Sheet, Cash Flow reports
 - Add narrative summaries with insights
 - Schedule recurring reports
 
 **TaxAI** - Tax Calculation Agent
+
 - Apply jurisdiction-specific tax rules
 - Calculate VAT, sales tax, withholding tax
 - Alert on threshold triggers and filing deadlines
 
 **ExplainBot** - Explainability Agent
+
 - Provide plain English explanations for AI actions
 - Link to source rules, historical transactions, and documentation
 - Inline "Why?" button on all AI suggestions
 
 ### Automated Jobs (Supabase Edge Functions + Cron)
+
 - **Daily bank sync** (2 AM): Fetch transactions from all connected accounts
 - **Nightly auto-categorization** (3 AM): Run LedgerBot on uncategorized transactions
 - **Weekly reconciliation** (Sundays): Run ReconAI for all accounts
@@ -160,6 +173,7 @@ Core AI agents with autonomous workflows under guardrails:
 ## Code Style & Conventions
 
 ### TypeScript
+
 - All code must be TypeScript with strict mode enabled
 - Use **interfaces** (not types) for object shapes
 - Avoid enums; use plain object maps
@@ -167,11 +181,13 @@ Core AI agents with autonomous workflows under guardrails:
 - File structure: exported component → subcomponents → helpers → static → types
 
 ### Naming
+
 - Directories: lowercase with dashes (e.g., `components/auth-wizard`)
 - Components: use named exports
 - Variables: descriptive with auxiliary verbs (e.g., `isLoading`, `hasError`)
 
 ### React Patterns
+
 - Prefer **Server Components** over Client Components
 - Minimize use of `'use client'`, `useEffect`, and `useState`
 - Use Server Actions with `useFormState` and `useFormStatus`
@@ -180,6 +196,7 @@ Core AI agents with autonomous workflows under guardrails:
 - Avoid global state libraries unless necessary
 
 ### UI & Styling
+
 - Use **Shadcn UI + Radix** for components
 - Tailwind CSS for all styling (mobile-first, responsive)
 - Support dark mode with `dark:` variants
@@ -187,11 +204,13 @@ Core AI agents with autonomous workflows under guardrails:
 - Optimize images: use WebP, include dimensions, lazy-load
 
 ### Performance
+
 - Optimize Core Web Vitals (LCP, CLS, FID)
 - Lazy load non-critical components
 - Return only required fields from database queries
 
 ### Linting & Validation
+
 - ESLint configured with Next.js best practices
 - TypeScript strict mode enforced
 - All inputs validated with `zod`
@@ -200,6 +219,7 @@ Core AI agents with autonomous workflows under guardrails:
 ## Core Features (MVP Scope)
 
 ### P0 - Must Have for Launch
+
 - **General Ledger & Chart of Accounts**: Industry/region templates, double-entry validation
 - **Bank Feeds**: Plaid (US/EU) and Wise (global) integration with auto-sync
 - **OCR Expenses**: Mobile camera capture, receipt extraction, auto-categorization
@@ -214,6 +234,7 @@ Core AI agents with autonomous workflows under guardrails:
 - **Import/Export**: CSV, QuickBooks Online, Xero migration tools
 
 ### P1 - Near-Term Enhancements
+
 - Anomaly detection with InsightAI
 - Cash flow forecasting
 - Integration marketplace v1 (Shopify, Gusto, WooCommerce)
@@ -222,6 +243,7 @@ Core AI agents with autonomous workflows under guardrails:
 - Period close and locking
 
 ### P2 - Future Roadmap
+
 - Predictive tax filing
 - Voice Co-Pilot
 - Industry-specific plug-ins
@@ -241,21 +263,25 @@ Core AI agents with autonomous workflows under guardrails:
 ## Integration Ecosystem
 
 ### Banking & Payments
+
 - **Plaid**: US and EU bank connections
 - **Wise**: Global multi-currency accounts
 - **Stripe**: Payment processing and invoicing
 - **PayPal**: Payment gateway integration
 
 ### Commerce & Payroll
+
 - **Shopify**: Order sync to revenue
 - **WooCommerce**: E-commerce integration (P1)
 - **Gusto**: Payroll totals (read-only)
 - **Square**: POS integration (P2)
 
 ### Migration & Accounting
+
 - **CSV Import**: Flexible templates
 - **QuickBooks Online**: Full data migration
 - **Xero**: Full data migration
 
 ## Scalability Target
+
 Aim to support **1M transactions/day/cluster** and **10k concurrent users** for v1 without degraded performance.

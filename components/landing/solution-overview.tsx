@@ -1,56 +1,56 @@
-"use client"
+'use client'
 
-import { motion, useInView } from "framer-motion"
-import { useRef } from "react"
+import { motion, useInView } from 'framer-motion'
+import { useRef } from 'react'
 
 const agents = [
   {
-    icon: "🤖",
-    title: "LedgerBot",
-    subtitle: "Auto-categorization",
+    icon: '🤖',
+    title: 'LedgerBot',
+    subtitle: 'Auto-categorization',
     description:
-      "Categorizes bank transactions with 98% accuracy. Confidence ≥90% auto-posts; lower confidence queues for review.",
-    metric: "85%+ fully automated",
+      'Categorizes bank transactions with 98% accuracy. Confidence ≥90% auto-posts; lower confidence queues for review.',
+    metric: '85%+ fully automated',
   },
   {
-    icon: "✓",
-    title: "ReconAI",
-    subtitle: "One-click reconciliation",
+    icon: '✓',
+    title: 'ReconAI',
+    subtitle: 'One-click reconciliation',
     description:
-      "Matches bank ↔ ledger ↔ payments automatically. Handles partial matches and posts differences with explanations.",
-    metric: "2 hours to close",
+      'Matches bank ↔ ledger ↔ payments automatically. Handles partial matches and posts differences with explanations.',
+    metric: '2 hours to close',
   },
   {
-    icon: "🔍",
-    title: "InsightAI",
-    subtitle: "Anomaly detection",
+    icon: '🔍',
+    title: 'InsightAI',
+    subtitle: 'Anomaly detection',
     description:
-      "Flags unusual amounts, duplicates, vendor changes, and category drift—before they become problems.",
-    metric: "Real-time alerts",
+      'Flags unusual amounts, duplicates, vendor changes, and category drift—before they become problems.',
+    metric: 'Real-time alerts',
   },
   {
-    icon: "📊",
-    title: "ReportGen",
-    subtitle: "Narrative reports",
+    icon: '📊',
+    title: 'ReportGen',
+    subtitle: 'Narrative reports',
     description:
-      "P&L, Balance Sheet, Cash Flow with drill-down to source transactions. Scheduled delivery and CSV/PDF exports.",
-    metric: "< 4 seconds",
+      'P&L, Balance Sheet, Cash Flow with drill-down to source transactions. Scheduled delivery and CSV/PDF exports.',
+    metric: '< 4 seconds',
   },
   {
-    icon: "🌐",
-    title: "TaxAI",
-    subtitle: "Global tax intelligence",
+    icon: '🌐',
+    title: 'TaxAI',
+    subtitle: 'Global tax intelligence',
     description:
-      "Applies US sales tax, EU VAT, Philippines BIR, and Japan consumption tax automatically with threshold alerts.",
-    metric: "4 regions at launch",
+      'Applies US sales tax, EU VAT, Philippines BIR, and Japan consumption tax automatically with threshold alerts.',
+    metric: '4 regions at launch',
   },
   {
-    icon: "💬",
-    title: "ExplainBot",
-    subtitle: "Explainable AI",
+    icon: '💬',
+    title: 'ExplainBot',
+    subtitle: 'Explainable AI',
     description:
       "Every AI action includes sources, rules applied, and historical references. Inline 'Why?' on all suggestions.",
-    metric: "Full transparency",
+    metric: 'Full transparency',
   },
 ]
 
@@ -73,10 +73,12 @@ export function SolutionOverview() {
           transition={{ duration: 0.6 }}
           className="text-center mb-16 max-w-3xl mx-auto"
         >
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-gray-900">AI agents that handle the work</h2>
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-gray-900">
+            AI agents that handle the work
+          </h2>
           <p className="text-lg text-gray-600 leading-relaxed">
-            OpportunityOS uses autonomous agents with explainable AI to categorize, reconcile, and report—while you
-            maintain full oversight.
+            Accunza uses autonomous agents with explainable AI to categorize, reconcile, and
+            report—while you maintain full oversight.
           </p>
         </motion.div>
 

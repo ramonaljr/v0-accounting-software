@@ -1,0 +1,15 @@
+{
+  "remark": "Test Journal Entry from Accunza",
+  "company": "Ramon Vallejera Jr",
+  "posting_date": "2025-10-25",
+  "accounts": [
+    {
+      "account": "1110 - Cash - RVJ",
+      "debit": 1
+    },
+    {
+      "account": "4110 - Sales - RVJ",
+      "credit": 1
+    }
+  ]
+}

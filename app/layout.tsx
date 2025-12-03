@@ -6,7 +6,7 @@ import { ThemeProvider } from '@/components/theme-provider'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'OpportunityOS - Accounting that runs itself',
+  title: 'Accunza - Accounting that runs itself',
   description:
     'Autonomous reconciliation, explainable insights, and global compliance out of the box. AI-powered accounting SaaS platform.',
   generator: 'Next.js',

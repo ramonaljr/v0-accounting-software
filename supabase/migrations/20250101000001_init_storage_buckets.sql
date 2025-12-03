@@ -1,4 +1,4 @@
--- OpportunityOS Phase 1 - Storage Setup
+-- Accunza Phase 1 - Storage Setup
 -- Migration: Initialize storage buckets and policies
 -- Created: 2025-10-21
 

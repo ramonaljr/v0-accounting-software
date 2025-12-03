@@ -1,4 +1,4 @@
--- OpportunityOS Phase 2 - Chart of Accounts Templates (Seed Data)
+-- Accunza Phase 2 - Chart of Accounts Templates (Seed Data)
 -- Migration: Seed COA templates for different regions and industries
 -- Created: 2025-10-21
 

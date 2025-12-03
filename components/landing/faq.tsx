@@ -1,56 +1,56 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { Plus, Minus } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
+import { useState } from 'react'
+import { Plus, Minus } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 
 export function FAQ() {
   const [openItems, setOpenItems] = useState<number[]>([])
 
   const toggleItem = (index: number) => {
-    setOpenItems((prev) => (prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]))
+    setOpenItems(prev => (prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]))
   }
 
   const faqs = [
     {
-      question: "How does AI categorization work?",
+      question: 'How does AI categorization work?',
       answer:
-        "LedgerBot analyzes transaction descriptions, merchant data, amounts, and historical patterns to suggest GL codes and tax categories. Suggestions with ≥90% confidence auto-post; lower confidence queues for your review. You can correct any suggestion and the AI learns from your feedback.",
+        'LedgerBot analyzes transaction descriptions, merchant data, amounts, and historical patterns to suggest GL codes and tax categories. Suggestions with ≥90% confidence auto-post; lower confidence queues for your review. You can correct any suggestion and the AI learns from your feedback.',
     },
     {
-      question: "Is my bank data secure?",
+      question: 'Is my bank data secure?',
       answer:
         "Yes. We use bank-grade AES-256 encryption at rest and TLS 1.3 in transit. Bank access tokens are stored with field-level encryption. We're SOC2 ready and GDPR compliant. You can revoke bank access anytime, and we never share your financial data.",
     },
     {
-      question: "What regions and currencies do you support?",
+      question: 'What regions and currencies do you support?',
       answer:
-        "At launch: US, EU, Philippines, and Japan with automated tax rules for sales tax, VAT, BIR, and consumption tax. We support 40+ currencies with daily FX rate updates. Additional regions and tax jurisdictions are added based on customer demand.",
+        'At launch: US, EU, Philippines, and Japan with automated tax rules for sales tax, VAT, BIR, and consumption tax. We support 40+ currencies with daily FX rate updates. Additional regions and tax jurisdictions are added based on customer demand.',
     },
     {
-      question: "Can I migrate from QuickBooks or Xero?",
+      question: 'Can I migrate from QuickBooks or Xero?',
       answer:
-        "Yes. We provide CSV import templates and starter migration tools for QuickBooks Online and Xero. You can import your chart of accounts, historical transactions, vendors, and customers. Our team provides migration support on Pro and Enterprise plans.",
+        'Yes. We provide CSV import templates and starter migration tools for QuickBooks Online and Xero. You can import your chart of accounts, historical transactions, vendors, and customers. Our team provides migration support on Pro and Enterprise plans.',
     },
     {
-      question: "How accurate is AI reconciliation?",
+      question: 'How accurate is AI reconciliation?',
       answer:
-        "ReconAI achieves 98%+ accuracy on sampled reconciliations. It matches bank ↔ ledger ↔ payments using amount, date, reference, and description. For partial matches or differences, it queues items for review with explanations. You approve all matches with one click.",
+        'ReconAI achieves 98%+ accuracy on sampled reconciliations. It matches bank ↔ ledger ↔ payments using amount, date, reference, and description. For partial matches or differences, it queues items for review with explanations. You approve all matches with one click.',
     },
     {
-      question: "Do I still need an accountant?",
+      question: 'Do I still need an accountant?',
       answer:
-        "OpportunityOS automates routine bookkeeping, but accountants bring strategic value: tax planning, financial advice, audits, and compliance filings. Our accountant workspace makes it easy for your accountant to review, approve, and advise across all your books.",
+        'Accunza automates routine bookkeeping, but accountants bring strategic value: tax planning, financial advice, audits, and compliance filings. Our accountant workspace makes it easy for your accountant to review, approve, and advise across all your books.',
     },
     {
-      question: "What integrations are available?",
+      question: 'What integrations are available?',
       answer:
-        "Phase 1: Plaid (bank feeds), Wise (multi-currency), Stripe (payments), PayPal (payments), Shopify (commerce orders), Gusto (payroll totals). Phase 2: WooCommerce, Square, and custom API integrations. Check our marketplace for the latest.",
+        'Phase 1: Plaid (bank feeds), Wise (multi-currency), Stripe (payments), PayPal (payments), Shopify (commerce orders), Gusto (payroll totals). Phase 2: WooCommerce, Square, and custom API integrations. Check our marketplace for the latest.',
     },
     {
-      question: "Can I export my data anytime?",
+      question: 'Can I export my data anytime?',
       answer:
-        "Absolutely. Export reports as CSV or PDF. Download complete audit logs (with cryptographic signatures) as JSON. Export your full chart of accounts, transactions, and journal entries anytime. You own your data—no lock-in.",
+        'Absolutely. Export reports as CSV or PDF. Download complete audit logs (with cryptographic signatures) as JSON. Export your full chart of accounts, transactions, and journal entries anytime. You own your data—no lock-in.',
     },
   ]
 
@@ -81,8 +81,8 @@ export function FAQ() {
           transition={{ duration: 0.6, delay: 0.2 }}
           viewport={{ once: true }}
         >
-          Questions? We&apos;ve got{" "}
-          <span className="bg-gradient-to-b from-gray-900 via-[#D4AF37] to-[#D4AF37] bg-clip-text text-transparent">
+          Questions? We&apos;ve got{' '}
+          <span className="bg-linear-to-b from-gray-900 via-[#D4AF37] to-[#D4AF37] bg-clip-text text-transparent">
             answers
           </span>
         </motion.h2>
@@ -101,8 +101,8 @@ export function FAQ() {
               onClick={() => toggleItem(index)}
               role="button"
               tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
+              onKeyDown={e => {
+                if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault()
                   toggleItem(index)
                 }
@@ -112,13 +112,13 @@ export function FAQ() {
                 <h3 className="m-0 font-medium pr-4 text-gray-900">{faq.question}</h3>
                 <motion.div
                   animate={{ rotate: openItems.includes(index) ? 180 : 0 }}
-                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                  transition={{ duration: 0.3, ease: 'easeInOut' }}
                   className=""
                 >
                   {openItems.includes(index) ? (
-                    <Minus className="text-[#D4AF37] flex-shrink-0 transition duration-300" size={24} />
+                    <Minus className="text-[#D4AF37] shrink-0 transition duration-300" size={24} />
                   ) : (
-                    <Plus className="text-[#D4AF37] flex-shrink-0 transition duration-300" size={24} />
+                    <Plus className="text-[#D4AF37] shrink-0 transition duration-300" size={24} />
                   )}
                 </motion.div>
               </div>
@@ -127,11 +127,11 @@ export function FAQ() {
                   <motion.div
                     className="mt-4 text-gray-600 leading-relaxed overflow-hidden"
                     initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                    animate={{ opacity: 1, height: "auto", marginTop: 16 }}
+                    animate={{ opacity: 1, height: 'auto', marginTop: 16 }}
                     exit={{ opacity: 0, height: 0, marginTop: 0 }}
                     transition={{
                       duration: 0.4,
-                      ease: "easeInOut",
+                      ease: 'easeInOut',
                       opacity: { duration: 0.2 },
                     }}
                   >

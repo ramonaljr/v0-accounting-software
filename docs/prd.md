@@ -1,6 +1,6 @@
-# OpportunityOS — Product Requirements Document (PRD)
+# Accunza — Product Requirements Document (PRD)
 
-**Product:** OpportunityOS (Global Accounting SaaS)  
+**Product:** Accunza (Global Accounting SaaS)  
 **Version:** 2.0  
 **Date:** 2025-10-06  
 **Owner:** Product Strategy & AI Systems Team  
@@ -11,7 +11,7 @@
 
 ## 1) Executive Summary
 
-OpportunityOS is a mobile-first, AI-powered accounting platform for SMBs, accountants, and global startups. It replaces rules-only automations with **agentic workflows** that reconcile, categorize, and report with human-in-the-loop oversight. Core advantages: autonomous reconciliation, explainable actions, multi-currency + tax intelligence, and developer-friendly integrations.
+Accunza is a mobile-first, AI-powered accounting platform for SMBs, accountants, and global startups. It replaces rules-only automations with **agentic workflows** that reconcile, categorize, and report with human-in-the-loop oversight. Core advantages: autonomous reconciliation, explainable actions, multi-currency + tax intelligence, and developer-friendly integrations.
 
 **Primary Launch Goal:** Ship an MVP that automates =85% of day-to-day bookkeeping with =98% accuracy across initial regions (US, EU, PH, JP), while demonstrating reliable bank feeds and one-click reconciliation. The default dashboard mirrors the industry-standard QuickBooks Online (Business overview) layout and terminology for familiarity and reduced training time.
 
@@ -47,14 +47,14 @@ Deliver **true workflow automation** (agentic reconciliation, anomaly detection,
 
 ### 3.2 KPIs
 
-| KPI | Target |
-|---|---|
-| Automation coverage | ≥ 85% |
-| Categorization/recon accuracy | ≥ 98% |
-| Monthly close time | ≤ 2 hours |
-| P95 dashboard latency | < 2s |
-| NPS (post-GA) | ≥ +70 |
-| Uptime | 99.9% |
+| KPI                           | Target    |
+| ----------------------------- | --------- |
+| Automation coverage           | ≥ 85%     |
+| Categorization/recon accuracy | ≥ 98%     |
+| Monthly close time            | ≤ 2 hours |
+| P95 dashboard latency         | < 2s      |
+| NPS (post-GA)                 | ≥ +70     |
+| Uptime                        | 99.9%     |
 
 ---
 
@@ -126,8 +126,9 @@ Deliver **true workflow automation** (agentic reconciliation, anomaly detection,
 - Connect accounts; nightly + on-demand sync; webhooks
 - Idempotent ingestion; de-duplication; retry on failure; **clear error surfacing**
 - Feed health metrics per account (lag, errors, last sync)
-  
+
 #### 6.2.1 Bank UX (QBO-style)
+
 - Bank Transactions UI: tabs (For review, Categorized, Excluded); row actions (Add, Match, Split, Transfer, Exclude); batch accept; filters; side-panel "Create rule from this"
 - Rules: list with priority and on/off; rule editor with conditions builder; import/export CSV template
 - Receipts Inbox: upload/email-in/capture; OCR; match to transactions; create expense/bill; archive
@@ -160,8 +161,9 @@ Deliver **true workflow automation** (agentic reconciliation, anomaly detection,
 - Templates; line items; discounts; taxes; multi-currency
 - Payment links (Stripe/PayPal); auto-match receipts
 - Dunning emails; **predictive reminder schedule**
-  
+
 #### 6.6.1 Sales UX (QBO-style)
+
 - Invoices list KPIs (unsent/overdue/open/paid 30d); quick actions (receive payment, send reminder)
 - Estimates (send/accept/convert), Receive payments (deposit to bank/undeposited funds)
 - Sales receipts, Credit memos, Refund receipts, Payment links
@@ -172,8 +174,9 @@ Deliver **true workflow automation** (agentic reconciliation, anomaly detection,
 - P&L, BS, CF; filters by period, dimension, currency
 - Drill-down to source entries and attachments
 - Scheduled delivery; CSV/PDF; narrative summary (**ReportGen**)
-  
+
 #### 6.7.1 Reports Center (QBO-style)
+
 - Library with favorites and management report packs; presets for Class/Location/Tags reports; drill-down preserved
 
 ### 6.8 AI Co-Pilot
@@ -182,8 +185,8 @@ Deliver **true workflow automation** (agentic reconciliation, anomaly detection,
 - Guardrails: RBAC-aware; confirmation for postings; **dry-run previews**
 - Context shortcuts (selected transactions → "Explain" / "Re-classify")
 
-
 ### 6.9 QBO-style Hubs & Pages
+
 - Customers/Vendors hubs with KPI strips and quick actions
 - Sales pages: Invoices, Estimates, Receive payments, Sales receipts, Credit memos, Refund receipts, Sales Transactions, Payment links, Products & Services import
 - Purchases pages: Bills, Bill payments, Expenses, Purchase orders, Checks
@@ -198,27 +201,27 @@ Deliver **true workflow automation** (agentic reconciliation, anomaly detection,
 - Close/lock periods, approval trail; exportable audit pack
 
 ### 6.11 Payroll (Connectors)
+
 - Providers: Gusto (P1), ADP/Justworks (P2); OAuth + webhooks
 - Account mapping UI: wages expense, employer taxes, employee withholdings (liabilities), benefits (employer vs employee), garnishments liabilities; payroll clearing; cash/bank
 - Per-employee allocations: default class/location/department; optional percent splits; validate totals
 - Direct deposit clearing: post to clearing then auto-clear to bank on feed match
 - Reports: Payroll summary; wages by class/location/department; liabilities; benefits/deductions
 
-
 ---
 
 ## 7) Non-Functional Requirements
 
-| Category | Requirement |
-|---|---|
-| Performance | P95 < 2s dashboard; < 4s report gen (≤ 50k tx range) |
-| Scalability | 1M tx/day/cluster; horizontal scale |
-| Availability | 99.9% |
-| Security | SOC2, GDPR; MFA; RLS; KMS |
-| Privacy | Data residency: US/EU/APAC buckets |
-| Auditability | Immutable logs for user/AI actions |
-| Accessibility | WCAG 2.1 AA |
-| Localization | i18n (EN at GA; JP/ES/FR post-GA) |
+| Category      | Requirement                                          |
+| ------------- | ---------------------------------------------------- |
+| Performance   | P95 < 2s dashboard; < 4s report gen (≤ 50k tx range) |
+| Scalability   | 1M tx/day/cluster; horizontal scale                  |
+| Availability  | 99.9%                                                |
+| Security      | SOC2, GDPR; MFA; RLS; KMS                            |
+| Privacy       | Data residency: US/EU/APAC buckets                   |
+| Auditability  | Immutable logs for user/AI actions                   |
+| Accessibility | WCAG 2.1 AA                                          |
+| Localization  | i18n (EN at GA; JP/ES/FR post-GA)                    |
 
 ---
 
@@ -264,14 +267,14 @@ flowchart LR
 
 ### 10.1 Agents
 
-| Agent | Purpose | Triggers | Autonomy |
-|---|---|---|---|
-| LedgerBot | Categorize/post | Ingestion, upload | Confidence-gated |
-| ReconAI | Match & reconcile | Nightly/on-demand | One-click approve |
-| InsightAI | Detect anomalies | Continuous | Notify only |
-| ReportGen | Summaries/reports | Scheduled/request | Read-only |
-| TaxAI | Apply taxes | Posting time | Rules + alerts |
-| ExplainBot | "Why?" answers | On click | Read-only |
+| Agent      | Purpose           | Triggers          | Autonomy          |
+| ---------- | ----------------- | ----------------- | ----------------- |
+| LedgerBot  | Categorize/post   | Ingestion, upload | Confidence-gated  |
+| ReconAI    | Match & reconcile | Nightly/on-demand | One-click approve |
+| InsightAI  | Detect anomalies  | Continuous        | Notify only       |
+| ReportGen  | Summaries/reports | Scheduled/request | Read-only         |
+| TaxAI      | Apply taxes       | Posting time      | Rules + alerts    |
+| ExplainBot | "Why?" answers    | On click          | Read-only         |
 
 ### 10.2 Guardrails
 
@@ -286,6 +289,7 @@ flowchart LR
 - Rollback to last good model if accuracy drops > 1.5 pp
 
 ### 10.4 Safe Mode & AI Health
+
 - Per‑agent and per‑tenant kill switch with audit; canary cohorts for auto‑post
 - AI Health dashboard: auto‑post coverage, false‑pos/neg, rule vs AI mix, drift status, model versions; alerts on thresholds
 
@@ -293,13 +297,13 @@ flowchart LR
 
 ## 11) Integrations (Phase 1 Targets)
 
-| Category | Providers |
-|---|---|
-| Bank Feeds | Plaid, Wise |
-| Payments | Stripe, PayPal |
-| Commerce | Shopify (orders/invoices) |
-| Payroll | Gusto (read totals) |
-| Migration | CSV, QBO, Xero |
+| Category   | Providers                 |
+| ---------- | ------------------------- |
+| Bank Feeds | Plaid, Wise               |
+| Payments   | Stripe, PayPal            |
+| Commerce   | Shopify (orders/invoices) |
+| Payroll    | Gusto (read totals)       |
+| Migration  | CSV, QBO, Xero            |
 
 ---
 
@@ -314,11 +318,12 @@ flowchart LR
 **Key Screens:** Dashboard, Transactions, Reconcile, Invoices, Expenses, Reports, Integrations, Settings, Accountant Workspace.
 
 ### 12.1 Dashboard (QBO-style preset)
+
 - Business overview layout (12-col grid): Bank accounts, Invoices owed to you, Profit and loss, Expenses, Sales, Cash flow, Taxes, Get things done, Bills to pay; optional Bill payments tile
 - Tile menus: View report/Customize/Remove; drilldowns; skeleton/async loading
 - Role-based presets and optional modules (Payroll/Mileage/Projects)
- - Presets: `default_qbo` (exact QBO tiles/order) and `qbo_plus` (default + additional tiles like To deposit, Unbilled, Collections, Inventory health, Payroll tasks, Favorites, KPIs, AI insights, At‑risk, Setup/CTA/Tips)
- - Mobile patterns: KPI strips collapse to chips; tiles stack 1‑column; sticky "Get things done" CTA; charts lazy‑load in viewport
+- Presets: `default_qbo` (exact QBO tiles/order) and `qbo_plus` (default + additional tiles like To deposit, Unbilled, Collections, Inventory health, Payroll tasks, Favorites, KPIs, AI insights, At‑risk, Setup/CTA/Tips)
+- Mobile patterns: KPI strips collapse to chips; tiles stack 1‑column; sticky "Get things done" CTA; charts lazy‑load in viewport
 
 ---
 
@@ -363,25 +368,25 @@ POST /api/v1/copilot/command   // intent->action with dry-run preview
 
 ## 16) Testing Strategy
 
-| Layer | Focus | Tools |
-|---|---|---|
-| Unit | Ledger math, tax calc, FX | Jest/Vitest |
-| Integration | Ingestion → Recon → Report | Playwright/Cypress |
-| AI Eval | F1, precision/recall, explain rubric | Custom harness |
-| Load | 1M tx/day, burst OCR | K6/Locust |
-| Security | SAST/DAST, pen test | OWASP ZAP, Burp |
-| UAT | 10 accountants/100 SMBs | Beta portal |
+| Layer       | Focus                                | Tools              |
+| ----------- | ------------------------------------ | ------------------ |
+| Unit        | Ledger math, tax calc, FX            | Jest/Vitest        |
+| Integration | Ingestion → Recon → Report           | Playwright/Cypress |
+| AI Eval     | F1, precision/recall, explain rubric | Custom harness     |
+| Load        | 1M tx/day, burst OCR                 | K6/Locust          |
+| Security    | SAST/DAST, pen test                  | OWASP ZAP, Burp    |
+| UAT         | 10 accountants/100 SMBs              | Beta portal        |
 
 ---
 
 ## 17) Release Plan
 
-| Phase | Timeline | Deliverables |
-|---|---|---|
-| Beta | Weeks 10–12 | MVP, runbooks, cohorts |
-| GA | Q4 2025 | Pricing, docs, support |
-| P1 | Q1 2026 | Marketplace, forecasting, approvals |
-| P2 | Q2 2026 | Global tax packs, deeper importers |
+| Phase | Timeline    | Deliverables                        |
+| ----- | ----------- | ----------------------------------- |
+| Beta  | Weeks 10–12 | MVP, runbooks, cohorts              |
+| GA    | Q4 2025     | Pricing, docs, support              |
+| P1    | Q1 2026     | Marketplace, forecasting, approvals |
+| P2    | Q2 2026     | Global tax packs, deeper importers  |
 
 **Rollout:** Blue/green; feature flags; canary cohorts; metrics-based promotion.
 
@@ -389,11 +394,11 @@ POST /api/v1/copilot/command   // intent->action with dry-run preview
 
 ## 18) Pricing (Draft)
 
-| Tier | Target | Key Inclusions |
-|---|---|---|
-| Starter | Freelancers | 1 bank, basic reports |
-| Pro | SMEs | Multi-bank, AI Co-Pilot, accountant access |
-| Enterprise | Firms | SSO/SAML, data residency, priority support |
+| Tier       | Target      | Key Inclusions                             |
+| ---------- | ----------- | ------------------------------------------ |
+| Starter    | Freelancers | 1 bank, basic reports                      |
+| Pro        | SMEs        | Multi-bank, AI Co-Pilot, accountant access |
+| Enterprise | Firms       | SSO/SAML, data residency, priority support |
 
 ---
 
@@ -421,6 +426,7 @@ POST /api/v1/copilot/command   // intent->action with dry-run preview
 - Beta satisfaction ≥ 8/10; critical bugs resolved
 
 ### 21) IFRS/GAAP Compliance (Summary)
+
 - COA templates for IFRS and US GAAP; opening balances import (debits=credits)
 - Financial statements: P&L, Balance Sheet, Cash Flow (Indirect) with IFRS/US GAAP line mappings
 - Trial Balance with balance validation; Statement of Changes in Equity (P1)
@@ -430,7 +436,6 @@ POST /api/v1/copilot/command   // intent->action with dry-run preview
 - Accruals, prepayments, deferred revenue (P1), auto-reversing entries
 - Period close: lock/reopen with audit; retained earnings roll-forward; audit pack
 - Audit controls: immutable logs and explainability; approvals
-
 
 ---
 
@@ -462,19 +467,22 @@ POST /api/v1/copilot/command   // intent->action with dry-run preview
 - **2025-10-06:** Plaid + Wise as phase-1 feeds
 
 ### 6.13 AR/AP Enhancements (Scope Notes)
+
 - AR: credit limits/holds, auto write-off thresholds, cash application rules; Statements & Collections Center; dunning schedules
-- AP: multi-step approvals, three-way match (PO�receipt�bill), early-payment discounts, payment runs & remittance advice, AP holds
+- AP: multi-step approvals, three-way match (PO�receipt�bill), early-payment discounts, payment runs & remittance advice, AP holds
 - Acceptance: AR/AP aging reports tie to GL control accounts; audit trails for holds/approvals/cash application
 
-### 6.14 Inventory (P2) � Accounting Notes
+### 6.14 Inventory (P2) � Accounting Notes
+
 - Perpetual inventory; item costing supports Avg and FIFO
 - Landed cost capitalization (freight/duties) allocated by qty/weight/value
-- COGS roll-forward: Beg Inv + Purchases (net returns/allowances/discounts) + Freight-in � Adjustments - End Inv = COGS
+- COGS roll-forward: Beg Inv + Purchases (net returns/allowances/discounts) + Freight-in � Adjustments - End Inv = COGS
 - Inventory valuation & COGS report ties to P&L COGS and BS inventory; FIFO uses layers; Avg uses weighted average
 - Multi-currency: purchases translated at transaction rate; inventory is non-monetary (no revaluation); FIFO layers retain historical rates
 - Acceptance: roll-forward and valuation tie to GL; variances flagged
 
 ### 6.15 Financial Analysis & Charts (P1)
+
 - Common-size statements: P&L as % of revenue; Balance Sheet as % of total assets/equity
 - Ratio dashboards: Current/Quick, Debt/Equity, Inventory/AR/AP turns, DOH/DSO/DPO, Gross/Operating/Net margins, ROA/ROE
 - Variance analysis: Prior vs Current; Budget vs Actual; waterfall drivers; Class/Location/Tag variances

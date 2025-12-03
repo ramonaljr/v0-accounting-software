@@ -1,4 +1,4 @@
--- OpportunityOS Phase 1 - Core Infrastructure
+-- Accunza Phase 1 - Core Infrastructure
 -- Migration: Initialize core schema for multi-tenant accounting platform
 -- Created: 2025-10-21
 

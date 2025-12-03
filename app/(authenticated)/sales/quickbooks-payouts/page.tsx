@@ -1,6 +1,6 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { DollarSign, TrendingUp, Download } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { DollarSign, TrendingUp, Download } from 'lucide-react'
 
 export default function PaymentPayoutsPage() {
   return (
@@ -8,7 +8,7 @@ export default function PaymentPayoutsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Payment Payouts</h1>
-          <p className="text-gray-600 mt-1">Track payouts from OpportunityOS Payments</p>
+          <p className="text-gray-600 mt-1">Track payouts from Accunza Payments</p>
         </div>
         <Button variant="outline" size="sm">
           <Download className="h-4 w-4 mr-2" />
@@ -64,15 +64,17 @@ export default function PaymentPayoutsPage() {
             <DollarSign className="h-5 w-5" />
             Payout History
           </CardTitle>
-          <CardDescription>OpportunityOS Payments deposits to your bank account</CardDescription>
+          <CardDescription>Accunza Payments deposits to your bank account</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-center py-12 text-gray-500">
             <p>No payouts yet</p>
-            <p className="text-sm mt-2">Start accepting payments through OpportunityOS to see payouts here</p>
+            <p className="text-sm mt-2">
+              Start accepting payments through Accunza to see payouts here
+            </p>
           </div>
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }
