@@ -408,11 +408,13 @@ export default function EmployeesPage() {
                       <TableCell>{(employee as any).departmentName || '-'}</TableCell>
                       <TableCell>{(employee as any).designationName || '-'}</TableCell>
                       <TableCell>
-                        {new Date(employee.dateOfJoining).toLocaleDateString('en-PH', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric',
-                        })}
+                        {employee.dateOfJoining
+                          ? new Date(employee.dateOfJoining).toLocaleDateString('en-PH', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
+                            })
+                          : '-'}
                       </TableCell>
                       <TableCell>
                         <Badge
