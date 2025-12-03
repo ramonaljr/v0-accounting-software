@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
     }
 
     try {
-      const userInfo = await whoAmI()
+      const userInfo = await whoAmI() as { message?: string }
       connectivity = {
         connected: true,
         user: userInfo.message || null,
