@@ -134,6 +134,8 @@ export async function POST(request: NextRequest) {
       payrollFrequency: validated.data.payrollFrequency || 'Monthly',
       departmentId: validated.data.departmentId,
       branchId: validated.data.branchId,
+      currency: 'PHP',
+      exchangeRate: 1,
     });
 
     return NextResponse.json({ success: true, data: entry }, { status: 201 });
