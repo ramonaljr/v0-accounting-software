@@ -47,6 +47,7 @@ export default function EmployeesPage() {
   // Stats
   const activeCount = employees.filter(e => e.status === 'Active').length;
   const newHiresCount = employees.filter(e => {
+    if (!e.dateOfJoining) return false;
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     return new Date(e.dateOfJoining) >= thirtyDaysAgo;
