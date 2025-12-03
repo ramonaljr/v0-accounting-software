@@ -9,20 +9,12 @@ import { createClient } from '@/lib/supabase/server';
 import { PayrollService } from '@/lib/services/hr/payroll.service';
 
 const CreatePayrollEntrySchema = z.object({
-  employeeId: z.string().uuid(),
   postingDate: z.string(),
   startDate: z.string(),
   endDate: z.string(),
   payrollFrequency: z.enum(['Monthly', 'Semi-Monthly', 'Weekly', 'Bi-Weekly']).optional(),
-  salaryStructureId: z.string().uuid().optional(),
-});
-
-const ProcessPayrollSchema = z.object({
-  payrollEntryId: z.string().uuid(),
-  employeeId: z.string().uuid(),
-  startDate: z.string(),
-  endDate: z.string(),
-  postingDate: z.string(),
+  departmentId: z.string().uuid().optional(),
+  branchId: z.string().uuid().optional(),
 });
 
 /**
@@ -49,21 +41,44 @@ export async function GET(request: NextRequest) {
     }
 
     const searchParams = request.nextUrl.searchParams;
-    const options = {
-      employeeId: searchParams.get('employeeId') || undefined,
-      status: searchParams.get('status') || undefined,
-      fromDate: searchParams.get('fromDate') ? new Date(searchParams.get('fromDate')!) : undefined,
-      toDate: searchParams.get('toDate') ? new Date(searchParams.get('toDate')!) : undefined,
-      limit: searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined,
-      offset: searchParams.get('offset') ? parseInt(searchParams.get('offset')!) : undefined,
-    };
+    const employeeId = searchParams.get('employeeId');
+    const status = searchParams.get('status');
+    const fromDate = searchParams.get('fromDate');
+    const toDate = searchParams.get('toDate');
+    const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : 50;
+    const offset = searchParams.get('offset') ? parseInt(searchParams.get('offset')!) : 0;
 
-    const result = await PayrollService.listSalarySlips(membership.org_id, options);
+    // Query salary slips directly from supabase
+    let query = supabase
+      .from('salary_slips')
+      .select('*', { count: 'exact' })
+      .eq('org_id', membership.org_id);
+
+    if (employeeId) {
+      query = query.eq('employee_id', employeeId);
+    }
+    if (status) {
+      query = query.eq('status', status);
+    }
+    if (fromDate) {
+      query = query.gte('start_date', fromDate);
+    }
+    if (toDate) {
+      query = query.lte('end_date', toDate);
+    }
+
+    query = query.range(offset, offset + limit - 1).order('posting_date', { ascending: false });
+
+    const { data: salarySlips, error, count } = await query;
+
+    if (error) {
+      throw new Error(error.message);
+    }
 
     return NextResponse.json({
       success: true,
-      data: result.salarySlips,
-      total: result.total,
+      data: salarySlips || [],
+      total: count || 0,
     });
   } catch (error) {
     console.error('[GET /api/hr/payroll] Error:', error);
@@ -113,12 +128,12 @@ export async function POST(request: NextRequest) {
 
     const entry = await PayrollService.createPayrollEntry({
       orgId: membership.org_id,
-      employeeId: validated.data.employeeId,
       postingDate: new Date(validated.data.postingDate),
       startDate: new Date(validated.data.startDate),
       endDate: new Date(validated.data.endDate),
       payrollFrequency: validated.data.payrollFrequency || 'Monthly',
-      salaryStructureId: validated.data.salaryStructureId,
+      departmentId: validated.data.departmentId,
+      branchId: validated.data.branchId,
     });
 
     return NextResponse.json({ success: true, data: entry }, { status: 201 });
@@ -133,7 +148,7 @@ export async function POST(request: NextRequest) {
 
 /**
  * PUT /api/hr/payroll
- * Process payroll (calculate earnings, deductions, taxes)
+ * Submit a payroll entry
  */
 export async function PUT(request: NextRequest) {
   try {
@@ -159,29 +174,22 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const validated = ProcessPayrollSchema.safeParse(body);
+    const { payrollEntryId } = body;
 
-    if (!validated.success) {
+    if (!payrollEntryId) {
       return NextResponse.json(
-        { success: false, error: 'Validation failed', details: validated.error.issues },
+        { success: false, error: 'payrollEntryId is required' },
         { status: 400 }
       );
     }
 
-    const result = await PayrollService.processPayroll({
-      orgId: membership.org_id,
-      payrollEntryId: validated.data.payrollEntryId,
-      employeeId: validated.data.employeeId,
-      startDate: new Date(validated.data.startDate),
-      endDate: new Date(validated.data.endDate),
-      postingDate: new Date(validated.data.postingDate),
-    });
+    const result = await PayrollService.submitPayrollEntry(payrollEntryId);
 
     return NextResponse.json({ success: true, data: result });
   } catch (error) {
     console.error('[PUT /api/hr/payroll] Error:', error);
     return NextResponse.json(
-      { success: false, error: error instanceof Error ? error.message : 'Failed to process payroll' },
+      { success: false, error: error instanceof Error ? error.message : 'Failed to submit payroll entry' },
       { status: 500 }
     );
   }
