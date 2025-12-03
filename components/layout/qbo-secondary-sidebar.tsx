@@ -100,11 +100,14 @@ export function QBOSecondarySidebar({ isOpen, onClose }: SecondarySidebarProps) 
       ],
     },
     {
-      label: "Payroll",
+      label: "Payroll & HR",
       icon: <span className="w-5 h-5 rounded-full bg-teal-600 flex items-center justify-center text-[10px] text-white font-bold">P</span>,
       children: [
         { label: "Overview", href: "/payroll/overview" },
         { label: "Employees", href: "/payroll/employees" },
+        { label: "Salary Slips", href: "/payroll/salary-slips" },
+        { label: "Leave Management", href: "/payroll/leave" },
+        { label: "Loans", href: "/payroll/loans" },
         { label: "Contractors", href: "/payroll/contractors" },
         { label: "Payroll taxes", href: "/payroll/taxes" },
         { label: "Benefits", href: "/payroll/benefits" },
