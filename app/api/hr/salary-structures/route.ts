@@ -26,19 +26,24 @@ const CreateComponentSchema = z.object({
 });
 
 const CreateStructureSchema = z.object({
-  name: z.string().min(1),
-  isActive: z.boolean().optional(),
-  salarySlipBasedOnTimesheet: z.boolean().optional(),
+  structureName: z.string().min(1),
+  description: z.string().optional(),
   payrollFrequency: z.enum(['Monthly', 'Semi-Monthly', 'Weekly', 'Bi-Weekly']).optional(),
+  modeOfPayment: z.string().optional(),
+  paymentAccount: z.string().optional(),
+  companyId: z.string().uuid().optional(),
+  currencyCode: z.string().optional(),
   earnings: z.array(z.object({
     salaryComponentId: z.string().uuid(),
+    amountBasedOnFormula: z.boolean().optional(),
+    formula: z.string().optional(),
     amount: z.number().optional(),
-    formulaVariables: z.record(z.string(), z.unknown()).optional(),
   })).optional(),
   deductions: z.array(z.object({
     salaryComponentId: z.string().uuid(),
+    amountBasedOnFormula: z.boolean().optional(),
+    formula: z.string().optional(),
     amount: z.number().optional(),
-    formulaVariables: z.record(z.string(), z.unknown()).optional(),
   })).optional(),
 });
 
