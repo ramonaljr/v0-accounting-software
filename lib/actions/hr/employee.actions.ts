@@ -55,10 +55,13 @@ const UpdateEmployeeSchema = CreateEmployeeSchema.partial().extend({
 
 const CreateDepartmentSchema = z.object({
   orgId: z.string().uuid(),
+  departmentCode: z.string().optional(),
   departmentName: z.string().min(1, 'Department name is required'),
-  parentDepartmentId: z.string().uuid().optional(),
+  parentId: z.string().uuid().optional(),
   companyId: z.string().uuid().optional(),
-  isGroup: z.boolean().optional(),
+  isGroup: z.boolean().default(false),
+  costCenterId: z.string().uuid().optional(),
+  payrollCostCenterId: z.string().uuid().optional(),
 });
 
 const CreateDesignationSchema = z.object({
