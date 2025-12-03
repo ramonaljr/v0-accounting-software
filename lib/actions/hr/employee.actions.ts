@@ -630,9 +630,10 @@ export async function addEmployeeDependent(
   employeeId: string,
   dependent: {
     dependentName: string;
-    relationship: string;
+    relationship?: string;
     dateOfBirth?: Date;
-    isBirQualified?: boolean;
+    gender?: string;
+    isQualifiedDependent: boolean;
   }
 ): Promise<ActionResult> {
   try {

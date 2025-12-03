@@ -6,7 +6,13 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser, getCurrentOrganization } from "@/lib/auth/server";
 import type { DashboardFilters, DashboardMetrics } from "./types";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/lib/supabase/database.types";
+
+// Type alias for Supabase client
+type TypedSupabaseClient = SupabaseClient<Database>;
 
 // =====================================================
 // GET DASHBOARD METRICS WITH FILTERS
@@ -16,37 +22,20 @@ export async function getDashboardMetrics(
   filters?: Partial<DashboardFilters>
 ): Promise<{ success: boolean; data?: DashboardMetrics; error?: string }> {
   try {
-    // TEMPORARY: Always return mock data until auth is properly configured
-    // TODO: Replace with proper environment variable check once auth is setup
-    const bypassAuth = true; // Hardcoded for now to get dashboard working
-
-    if (bypassAuth) {
-      return {
-        success: true,
-        data: getMockDashboardMetrics(filters),
-      };
-    }
-
-    const supabase = await createClient();
-
-    // Verify authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
+    // Verify authentication using auth helper
+    const user = await getCurrentUser();
+    if (!user) {
       return { success: false, error: "Unauthorized" };
     }
 
-    // Get organization
-    const { data: membership } = await supabase
-      .from("org_members")
-      .select("org_id, role")
-      .eq("user_id", user.id)
-      .single();
-
-    if (!membership) {
+    // Get organization using auth helper
+    const organization = await getCurrentOrganization();
+    if (!organization) {
       return { success: false, error: "No organization found" };
     }
 
-    const orgId = membership.org_id;
+    const supabase = await createClient();
+    const orgId = organization.id;
 
     // Apply default filters
     const today = new Date();
@@ -148,7 +137,13 @@ export async function getDashboardMetrics(
 // HELPER FUNCTIONS FOR FETCHING SPECIFIC METRICS
 // =====================================================
 
-async function fetchRevenueMetrics(supabase: any, orgId: string, startDate: string, endDate: string, basis: string) {
+async function fetchRevenueMetrics(
+  supabase: TypedSupabaseClient,
+  orgId: string,
+  startDate: string,
+  endDate: string,
+  basis: string
+) {
   // TODO: Query from journal_entries or use existing generateProfitLossReport
   const trend = generateTrendData(6);
 
@@ -161,7 +156,13 @@ async function fetchRevenueMetrics(supabase: any, orgId: string, startDate: stri
   };
 }
 
-async function fetchExpenseMetrics(supabase: any, orgId: string, startDate: string, endDate: string, basis: string) {
+async function fetchExpenseMetrics(
+  supabase: TypedSupabaseClient,
+  orgId: string,
+  startDate: string,
+  endDate: string,
+  basis: string
+) {
   // TODO: Query from journal_entries grouped by account category
   const trend = generateTrendData(6, 8000, 18000);
 
@@ -180,7 +181,7 @@ async function fetchExpenseMetrics(supabase: any, orgId: string, startDate: stri
   };
 }
 
-async function fetchARMetrics(supabase: any, orgId: string) {
+async function fetchARMetrics(supabase: TypedSupabaseClient, orgId: string) {
   // Query ar_aging view
   const { data, error } = await supabase
     .from("ar_aging")
@@ -218,7 +219,7 @@ async function fetchARMetrics(supabase: any, orgId: string) {
   };
 }
 
-async function fetchAPMetrics(supabase: any, orgId: string) {
+async function fetchAPMetrics(supabase: TypedSupabaseClient, orgId: string) {
   // TODO: Create ap_aging view similar to ar_aging
   return {
     total: 8500,
@@ -235,7 +236,7 @@ async function fetchAPMetrics(supabase: any, orgId: string) {
   };
 }
 
-async function fetchInvoiceMetrics(supabase: any, orgId: string) {
+async function fetchInvoiceMetrics(supabase: TypedSupabaseClient, orgId: string) {
   const { data, error } = await supabase
     .from("invoices")
     .select("status, total, amount_due")
@@ -269,7 +270,7 @@ async function fetchInvoiceMetrics(supabase: any, orgId: string) {
   };
 }
 
-async function fetchBillMetrics(supabase: any, orgId: string) {
+async function fetchBillMetrics(supabase: TypedSupabaseClient, orgId: string) {
   // TODO: Query bills table when available
   return {
     open: 5,
