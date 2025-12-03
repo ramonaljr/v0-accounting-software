@@ -31,12 +31,12 @@ const CreateStructureSchema = z.object({
   earnings: z.array(z.object({
     salaryComponentId: z.string().uuid(),
     amount: z.number().optional(),
-    formulaVariables: z.record(z.any()).optional(),
+    formulaVariables: z.record(z.string(), z.unknown()).optional(),
   })).optional(),
   deductions: z.array(z.object({
     salaryComponentId: z.string().uuid(),
     amount: z.number().optional(),
-    formulaVariables: z.record(z.any()).optional(),
+    formulaVariables: z.record(z.string(), z.unknown()).optional(),
   })).optional(),
 });
 
