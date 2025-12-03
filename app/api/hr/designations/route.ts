@@ -6,7 +6,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
-import { EmployeeService } from '@/lib/services/hr/employee.service';
 
 const CreateDesignationSchema = z.object({
   designationName: z.string().min(1),
@@ -17,7 +16,7 @@ const CreateDesignationSchema = z.object({
  * GET /api/hr/designations
  * List designations
  */
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -36,11 +35,20 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
     }
 
-    const designations = await EmployeeService.listDesignations(membership.org_id);
+    const { data: designations, error } = await supabase
+      .from('designations')
+      .select('*')
+      .eq('org_id', membership.org_id)
+      .eq('is_active', true)
+      .order('designation_name', { ascending: true });
+
+    if (error) {
+      throw new Error(error.message);
+    }
 
     return NextResponse.json({
       success: true,
-      data: designations,
+      data: designations || [],
     });
   } catch (error) {
     console.error('[GET /api/hr/designations] Error:', error);
@@ -88,10 +96,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const designation = await EmployeeService.createDesignation({
-      orgId: membership.org_id,
-      ...validated.data,
-    });
+    const { data: designation, error } = await supabase
+      .from('designations')
+      .insert({
+        org_id: membership.org_id,
+        designation_name: validated.data.designationName,
+        description: validated.data.description,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
 
     return NextResponse.json({ success: true, data: designation }, { status: 201 });
   } catch (error) {

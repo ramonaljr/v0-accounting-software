@@ -6,7 +6,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
-import { PayrollService } from '@/lib/services/hr/payroll.service';
 
 const MarkAttendanceSchema = z.object({
   employeeId: z.string().uuid(),
@@ -62,15 +61,22 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const attendance = await PayrollService.getAttendance(
-      employeeId,
-      new Date(fromDate),
-      new Date(toDate)
-    );
+    // Query attendance directly from supabase
+    const { data: attendance, error } = await supabase
+      .from('attendance')
+      .select('*')
+      .eq('employee_id', employeeId)
+      .gte('attendance_date', fromDate)
+      .lte('attendance_date', toDate)
+      .order('attendance_date', { ascending: false });
+
+    if (error) {
+      throw new Error(error.message);
+    }
 
     return NextResponse.json({
       success: true,
-      data: attendance,
+      data: attendance || [],
     });
   } catch (error) {
     console.error('[GET /api/hr/attendance] Error:', error);
@@ -125,12 +131,15 @@ export async function POST(request: NextRequest) {
       for (let i = 0; i < validated.data.entries.length; i++) {
         const entry = validated.data.entries[i];
         try {
-          await PayrollService.markAttendance({
-            orgId: membership.org_id,
-            employeeId: entry.employeeId,
-            attendanceDate: new Date(entry.attendanceDate),
-            status: entry.status,
-          });
+          const { error } = await supabase
+            .from('attendance')
+            .upsert({
+              org_id: membership.org_id,
+              employee_id: entry.employeeId,
+              attendance_date: entry.attendanceDate,
+              status: entry.status,
+            }, { onConflict: 'employee_id,attendance_date' });
+          if (error) throw error;
           results.success++;
         } catch (error) {
           results.failed.push({
@@ -155,17 +164,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const attendance = await PayrollService.markAttendance({
-      orgId: membership.org_id,
-      employeeId: validated.data.employeeId,
-      attendanceDate: new Date(validated.data.attendanceDate),
-      status: validated.data.status,
-      inTime: validated.data.inTime,
-      outTime: validated.data.outTime,
-      workingHours: validated.data.workingHours,
-      leaveApplicationId: validated.data.leaveApplicationId,
-      leaveTypeId: validated.data.leaveTypeId,
-    });
+    const { data: attendance, error } = await supabase
+      .from('attendance')
+      .upsert({
+        org_id: membership.org_id,
+        employee_id: validated.data.employeeId,
+        attendance_date: validated.data.attendanceDate,
+        status: validated.data.status,
+        in_time: validated.data.inTime,
+        out_time: validated.data.outTime,
+        working_hours: validated.data.workingHours,
+        leave_application_id: validated.data.leaveApplicationId,
+        leave_type_id: validated.data.leaveTypeId,
+      }, { onConflict: 'employee_id,attendance_date' })
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
 
     return NextResponse.json({ success: true, data: attendance }, { status: 201 });
   } catch (error) {

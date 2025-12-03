@@ -7,7 +7,12 @@
       "Bash(vercel ls:*)",
       "Bash(vercel project:*)",
       "Bash(vercel:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []

@@ -37,11 +37,20 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
     }
 
-    const departments = await EmployeeService.listDepartments(membership.org_id);
+    const { data: departments, error } = await supabase
+      .from('departments')
+      .select('*')
+      .eq('org_id', membership.org_id)
+      .eq('is_active', true)
+      .order('department_name', { ascending: true });
+
+    if (error) {
+      throw new Error(error.message);
+    }
 
     return NextResponse.json({
       success: true,
-      data: departments,
+      data: departments || [],
     });
   } catch (error) {
     console.error('[GET /api/hr/departments] Error:', error);
@@ -89,10 +98,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const department = await EmployeeService.createDepartment({
-      orgId: membership.org_id,
-      ...validated.data,
-    });
+    const { data: department, error } = await supabase
+      .from('departments')
+      .insert({
+        org_id: membership.org_id,
+        department_name: validated.data.departmentName,
+        parent_department_id: validated.data.parentDepartmentId,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
 
     return NextResponse.json({ success: true, data: department }, { status: 201 });
   } catch (error) {

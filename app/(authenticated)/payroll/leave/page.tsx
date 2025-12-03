@@ -118,13 +118,15 @@ export default function LeavePage() {
         ]);
 
         if (empResult.success && empResult.data) {
-          setEmployees(empResult.data.employees || []);
+          const data = empResult.data as { employees?: Employee[] };
+          setEmployees(data.employees || []);
         }
         if (typesResult.success && typesResult.data) {
-          setLeaveTypes(typesResult.data || []);
+          setLeaveTypes(typesResult.data as LeaveType[]);
         }
         if (appsResult.success && appsResult.data) {
-          setApplications(appsResult.data.applications || []);
+          const data = appsResult.data as { applications?: LeaveApplication[] };
+          setApplications(data.applications || []);
         }
         // Leave balances would be loaded per employee when selected
       } catch (error) {
@@ -160,7 +162,8 @@ export default function LeavePage() {
         // Reload applications
         const appsResult = await listLeaveApplications();
         if (appsResult.success && appsResult.data) {
-          setApplications(appsResult.data.applications || []);
+          const data = appsResult.data as { applications?: LeaveApplication[] };
+          setApplications(data.applications || []);
         }
       } else {
         alert(result.error || 'Failed to create leave application');
@@ -175,7 +178,8 @@ export default function LeavePage() {
       if (result.success) {
         const appsResult = await listLeaveApplications();
         if (appsResult.success && appsResult.data) {
-          setApplications(appsResult.data.applications || []);
+          const data = appsResult.data as { applications?: LeaveApplication[] };
+          setApplications(data.applications || []);
         }
       } else {
         alert(result.error || 'Failed to approve leave');
@@ -186,12 +190,13 @@ export default function LeavePage() {
   // Handle reject
   async function handleReject(id: string) {
     startTransition(async () => {
-      const reason = prompt('Rejection reason (optional):');
-      const result = await rejectLeaveApplication(id, reason || undefined);
+      const reason = prompt('Rejection reason (optional):') || '';
+      const result = await rejectLeaveApplication(id, reason);
       if (result.success) {
         const appsResult = await listLeaveApplications();
         if (appsResult.success && appsResult.data) {
-          setApplications(appsResult.data.applications || []);
+          const data = appsResult.data as { applications?: LeaveApplication[] };
+          setApplications(data.applications || []);
         }
       } else {
         alert(result.error || 'Failed to reject leave');

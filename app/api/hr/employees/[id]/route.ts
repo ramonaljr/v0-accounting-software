@@ -12,7 +12,7 @@ const UpdateEmployeeSchema = z.object({
   firstName: z.string().min(1).optional(),
   middleName: z.string().optional(),
   lastName: z.string().min(1).optional(),
-  gender: z.string().optional(),
+  gender: z.enum(['Male', 'Female', 'Other', 'Prefer not to say']).optional(),
   dateOfBirth: z.string().optional(),
   dateOfJoining: z.string().optional(),
   departmentId: z.string().uuid().optional(),

@@ -122,11 +122,13 @@ export default function SalarySlipsPage() {
         ]);
 
         if (slipsResult.success && slipsResult.data) {
-          setSalarySlips(slipsResult.data.salarySlips || []);
-          setTotal(slipsResult.data.total || 0);
+          const slipsData = slipsResult.data as { salarySlips?: SalarySlip[]; total?: number };
+          setSalarySlips(slipsData.salarySlips || []);
+          setTotal(slipsData.total || 0);
         }
         if (empResult.success && empResult.data) {
-          setEmployees(empResult.data.employees || []);
+          const empData = empResult.data as { employees?: Employee[] };
+          setEmployees(empData.employees || []);
         }
       } catch (error) {
         console.error('Failed to load salary slips:', error);
@@ -159,7 +161,8 @@ export default function SalarySlipsPage() {
         // Reload list
         const slipsResult = await listSalarySlips({ limit: 100 });
         if (slipsResult.success && slipsResult.data) {
-          setSalarySlips(slipsResult.data.salarySlips || []);
+          const slipsData = slipsResult.data as { salarySlips?: SalarySlip[] };
+          setSalarySlips(slipsData.salarySlips || []);
         }
       } else {
         alert(result.error || 'Failed to submit salary slip');
@@ -176,7 +179,8 @@ export default function SalarySlipsPage() {
       if (result.success) {
         const slipsResult = await listSalarySlips({ limit: 100 });
         if (slipsResult.success && slipsResult.data) {
-          setSalarySlips(slipsResult.data.salarySlips || []);
+          const slipsData = slipsResult.data as { salarySlips?: SalarySlip[] };
+          setSalarySlips(slipsData.salarySlips || []);
         }
         setIsViewDialogOpen(false);
       } else {

@@ -92,15 +92,17 @@ export default function PayrollOverviewPage() {
         ]);
 
         if (empResult.success && empResult.data) {
-          setEmployees(empResult.data.employees || []);
+          const empData = empResult.data as { employees?: Employee[] };
+          setEmployees(empData.employees || []);
           // Pre-select all active employees
-          setSelectedEmployees(empResult.data.employees?.map((e: Employee) => e.id) || []);
+          setSelectedEmployees(empData.employees?.map((e: Employee) => e.id) || []);
         }
         if (slipsResult.success && slipsResult.data) {
-          setSalarySlips(slipsResult.data.salarySlips || []);
+          const slipsData = slipsResult.data as { salarySlips?: SalarySlip[] };
+          setSalarySlips(slipsData.salarySlips || []);
         }
         if (periodsResult.success && periodsResult.data) {
-          setPayrollPeriods(periodsResult.data || []);
+          setPayrollPeriods(periodsResult.data as PayrollPeriod[]);
         }
       } catch (error) {
         console.error('Failed to load payroll data:', error);
@@ -153,7 +155,8 @@ export default function PayrollOverviewPage() {
         // Reload salary slips
         const slipsResult = await listSalarySlips({ limit: 50 });
         if (slipsResult.success && slipsResult.data) {
-          setSalarySlips(slipsResult.data.salarySlips || []);
+          const slipsData = slipsResult.data as { salarySlips?: SalarySlip[] };
+          setSalarySlips(slipsData.salarySlips || []);
         }
       }
     });
@@ -179,7 +182,7 @@ export default function PayrollOverviewPage() {
         setIsCreatePeriodOpen(false);
         const periodsResult = await listPayrollPeriods();
         if (periodsResult.success && periodsResult.data) {
-          setPayrollPeriods(periodsResult.data || []);
+          setPayrollPeriods(periodsResult.data as PayrollPeriod[]);
         }
       } else {
         alert(result.error || 'Failed to create payroll period');

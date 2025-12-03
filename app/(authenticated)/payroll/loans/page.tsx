@@ -93,7 +93,8 @@ export default function LoansPage() {
         ]);
 
         if (empResult.success && empResult.data) {
-          setEmployees(empResult.data.employees || []);
+          const data = empResult.data as { employees?: Employee[] };
+          setEmployees(data.employees || []);
         }
         if (loansResult) {
           setLoans(loansResult);
