@@ -8,28 +8,38 @@ import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { employeeService } from '@/lib/services/hr/employee.service';
 
-// Request schemas
+// Request schemas - matching lib/models/hr/employee.ts createEmployeeSchema
 const CreateEmployeeSchema = z.object({
-  firstName: z.string().min(1),
-  middleName: z.string().optional(),
-  lastName: z.string().min(1),
-  gender: z.string().optional(),
-  dateOfBirth: z.string().optional(),
-  dateOfJoining: z.string(),
+  firstName: z.string().min(1).max(100),
+  middleName: z.string().max(100).optional(),
+  lastName: z.string().min(1).max(100),
+  suffix: z.string().max(20).optional(),
+  gender: z.enum(['Male', 'Female', 'Other', 'Prefer not to say']).optional(),
+  dateOfBirth: z.coerce.date().optional(),
+  maritalStatus: z.enum(['Single', 'Married', 'Divorced', 'Widowed', 'Separated']).optional(),
+  dateOfJoining: z.coerce.date().optional(),
   departmentId: z.string().uuid().optional(),
   designationId: z.string().uuid().optional(),
   branchId: z.string().uuid().optional(),
   employmentTypeId: z.string().uuid().optional(),
-  employeeGradeId: z.string().uuid().optional(),
+  gradeId: z.string().uuid().optional(),
+  reportsTo: z.string().uuid().optional(),
   personalEmail: z.string().email().optional(),
   companyEmail: z.string().email().optional(),
-  mobileNo: z.string().optional(),
-  tinNo: z.string().optional(),
-  sssNo: z.string().optional(),
-  philhealthNo: z.string().optional(),
-  pagibigNo: z.string().optional(),
-  taxStatus: z.string().optional(),
-  qualifiedDependents: z.number().min(0).max(4).optional(),
+  mobilePhone: z.string().max(50).optional(),
+  emergencyContactName: z.string().max(200).optional(),
+  emergencyContactPhone: z.string().max(50).optional(),
+  currentAddress: z.string().optional(),
+  permanentAddress: z.string().optional(),
+  tinNo: z.string().max(50).optional(),
+  sssNo: z.string().max(50).optional(),
+  philhealthNo: z.string().max(50).optional(),
+  pagibigNo: z.string().max(50).optional(),
+  bankName: z.string().max(200).optional(),
+  bankAccountNo: z.string().max(100).optional(),
+  bankAccountName: z.string().max(200).optional(),
+  salaryMode: z.enum(['Bank', 'Cash', 'Cheque']).default('Bank'),
+  paymentDaysBasis: z.enum(['Calendar Days', 'Working Days']).default('Calendar Days'),
 });
 
 /**
