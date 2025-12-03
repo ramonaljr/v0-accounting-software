@@ -9,18 +9,20 @@ import { createClient } from '@/lib/supabase/server';
 import { SalaryStructureService } from '@/lib/services/hr/salary-structure.service';
 
 const CreateComponentSchema = z.object({
+  componentCode: z.string().min(1),
   componentName: z.string().min(1),
   componentType: z.enum(['Earning', 'Deduction']),
-  abbreviation: z.string().optional(),
+  abbr: z.string().optional(),
   description: z.string().optional(),
-  isTaxable: z.boolean().optional(),
-  isPayable: z.boolean().optional(),
+  isTaxApplicable: z.boolean().optional(),
+  isPayableBased: z.boolean().optional(),
   dependsOnPaymentDays: z.boolean().optional(),
+  isRecurring: z.boolean().optional(),
   isStatutory: z.boolean().optional(),
   statisticalComponent: z.boolean().optional(),
   formula: z.string().optional(),
   amountBasedOnFormula: z.boolean().optional(),
-  formulaAmount: z.number().optional(),
+  defaultAmount: z.number().optional(),
 });
 
 const CreateStructureSchema = z.object({
