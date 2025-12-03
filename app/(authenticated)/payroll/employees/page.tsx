@@ -65,14 +65,15 @@ export default function EmployeesPage() {
         ]);
 
         if (empResult.success && empResult.data) {
-          setEmployees(empResult.data.employees || []);
-          setTotal(empResult.data.total || 0);
+          const data = empResult.data as { employees?: Employee[]; total?: number };
+          setEmployees(data.employees || []);
+          setTotal(data.total || 0);
         }
         if (deptResult.success && deptResult.data) {
-          setDepartments(deptResult.data || []);
+          setDepartments(deptResult.data as Department[]);
         }
         if (desigResult.success && desigResult.data) {
-          setDesignations(desigResult.data || []);
+          setDesignations(desigResult.data as Designation[]);
         }
       } catch (error) {
         console.error('Failed to load employees:', error);
