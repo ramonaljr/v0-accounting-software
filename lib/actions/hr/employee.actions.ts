@@ -19,30 +19,33 @@ const CreateEmployeeSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
   middleName: z.string().optional(),
   lastName: z.string().min(1, 'Last name is required'),
-  gender: z.string().optional(),
-  dateOfBirth: z.string().optional(),
-  dateOfJoining: z.string(),
+  suffix: z.string().optional(),
+  gender: z.enum(['Male', 'Female', 'Other', 'Prefer not to say']).optional(),
+  dateOfBirth: z.coerce.date().optional(),
+  maritalStatus: z.enum(['Single', 'Married', 'Divorced', 'Widowed', 'Separated']).optional(),
+  dateOfJoining: z.coerce.date().optional(),
   departmentId: z.string().uuid().optional(),
   designationId: z.string().uuid().optional(),
   branchId: z.string().uuid().optional(),
   employmentTypeId: z.string().uuid().optional(),
-  employeeGradeId: z.string().uuid().optional(),
+  gradeId: z.string().uuid().optional(),
   reportsTo: z.string().uuid().optional(),
   personalEmail: z.string().email().optional().or(z.literal('')),
   companyEmail: z.string().email().optional().or(z.literal('')),
-  mobileNo: z.string().optional(),
+  mobilePhone: z.string().optional(),
   emergencyContactName: z.string().optional(),
-  emergencyContactNo: z.string().optional(),
+  emergencyContactPhone: z.string().optional(),
   currentAddress: z.string().optional(),
   permanentAddress: z.string().optional(),
   bankName: z.string().optional(),
   bankAccountNo: z.string().optional(),
+  bankAccountName: z.string().optional(),
   tinNo: z.string().optional(),
   sssNo: z.string().optional(),
   philhealthNo: z.string().optional(),
   pagibigNo: z.string().optional(),
-  taxStatus: z.string().optional(),
-  qualifiedDependents: z.number().min(0).max(4).optional(),
+  salaryMode: z.enum(['Bank', 'Cash', 'Cheque']).default('Bank'),
+  paymentDaysBasis: z.enum(['Calendar Days', 'Working Days']).default('Calendar Days'),
 });
 
 const UpdateEmployeeSchema = CreateEmployeeSchema.partial().extend({
@@ -106,15 +109,7 @@ export async function createEmployee(
       ? Object.fromEntries(formData.entries())
       : formData;
 
-    // Convert string numbers to actual numbers
-    const data = {
-      ...rawData,
-      qualifiedDependents: rawData.qualifiedDependents
-        ? Number(rawData.qualifiedDependents)
-        : undefined,
-    };
-
-    const validated = CreateEmployeeSchema.safeParse(data);
+    const validated = CreateEmployeeSchema.safeParse(rawData);
     if (!validated.success) {
       return {
         success: false,
