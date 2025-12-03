@@ -10,8 +10,10 @@ import { ThirteenthMonthService } from '@/lib/services/hr/thirteenth-month.servi
 
 const ComputeSchema = z.object({
   year: z.number().min(2020).max(2100),
-  cutoffDate: z.string().optional(),
+  asOfDate: z.string().optional(),
   employeeIds: z.array(z.string().uuid()).optional(),
+  departmentId: z.string().uuid().optional(),
+  includeProrated: z.boolean().optional(),
 });
 
 /**
@@ -102,8 +104,10 @@ export async function POST(request: NextRequest) {
     const result = await ThirteenthMonthService.computeForOrganization({
       orgId: membership.org_id,
       year: validated.data.year,
-      cutoffDate: validated.data.cutoffDate ? new Date(validated.data.cutoffDate) : undefined,
+      asOfDate: validated.data.asOfDate ? new Date(validated.data.asOfDate) : undefined,
       employeeIds: validated.data.employeeIds,
+      departmentId: validated.data.departmentId,
+      includeProrated: validated.data.includeProrated,
     });
 
     return NextResponse.json({ success: true, data: result }, { status: 201 });
