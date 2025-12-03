@@ -13,7 +13,7 @@ const CreateLeaveApplicationSchema = z.object({
   leaveTypeId: z.string().uuid(),
   fromDate: z.string(),
   toDate: z.string(),
-  halfDay: z.boolean().optional(),
+  halfDay: z.boolean().default(false),
   halfDayDate: z.string().optional(),
   reason: z.string().optional(),
 });
