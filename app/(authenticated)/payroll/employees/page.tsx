@@ -96,8 +96,9 @@ export default function EmployeesPage() {
         // Reload employees
         const empResult = await listEmployees();
         if (empResult.success && empResult.data) {
-          setEmployees(empResult.data.employees || []);
-          setTotal(empResult.data.total || 0);
+          const data = empResult.data as { employees?: Employee[]; total?: number };
+          setEmployees(data.employees || []);
+          setTotal(data.total || 0);
         }
       } else {
         alert(result.error || 'Failed to create employee');
