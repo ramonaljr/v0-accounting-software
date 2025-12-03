@@ -209,7 +209,7 @@ export default function BomPage() {
     startTransition(async () => {
       const result = await getBomById(id);
       if (result.success) {
-        setSelectedBom(result.data);
+        setSelectedBom(result.data as Bom);
         setIsViewDialogOpen(true);
       } else {
         alert(result.error || 'Failed to load BOM details');
