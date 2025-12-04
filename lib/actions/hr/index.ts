@@ -28,19 +28,24 @@ export {
 // Payroll Actions
 export {
   createPayrollEntry,
-  processPayroll,
+  getPayrollEntry,
+  createSalarySlips,
   submitPayrollEntry,
-  cancelPayrollEntry,
   getSalarySlip,
+  generatePayslip,
   listSalarySlips,
+  listPayrollEntries,
   createPayrollPeriod,
   listPayrollPeriods,
+  listSalaryComponents,
+  getEmployeesForPayroll,
+  getYTDEarnings,
+  getWorkingDays,
+  calculatePeriodHolidayPay,
+  getHolidaysInRange,
   createBulkPayrollEntries,
   processBulkPayroll,
-  listSalaryComponents,
-  markAttendance,
-  getAttendance,
-  bulkMarkAttendance,
+  cancelPayrollEntry,
 } from './payroll.actions';
 
 // Leave Actions

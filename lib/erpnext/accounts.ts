@@ -111,7 +111,7 @@ export async function pushAccountToERPNext(params: {
       erpDoctype: 'Account',
       direction: 'push',
     },
-    erpAccount
+    erpAccount as unknown as Record<string, unknown>
   )
 
   return result
@@ -146,7 +146,7 @@ export async function importCOAFromERPNext(params: {
     const supabase = await createClient()
 
     // Fetch all accounts for the company from ERPNext
-    const response = await erpnextFetch(
+    const response = await erpnextFetch<{ data?: ERPNextAccount[] }>(
       `/api/resource/Account?fields=["name","account_name","account_number","account_type","parent_account","company","is_group","root_type","account_currency","disabled"]&filters=[["company","=","${params.companyName}"]]&limit_page_length=999`
     )
 
@@ -264,7 +264,7 @@ export async function importCOAFromERPNext(params: {
  */
 export async function getERPNextCompanies(): Promise<{ name: string; company_name: string }[]> {
   try {
-    const response = await erpnextFetch(
+    const response = await erpnextFetch<{ data?: { name: string; company_name: string }[] }>(
       '/api/resource/Company?fields=["name","company_name"]&limit_page_length=999'
     )
 

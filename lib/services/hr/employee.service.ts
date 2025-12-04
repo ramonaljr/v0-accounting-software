@@ -19,6 +19,9 @@ import {
   CreateEmployee,
   CreateDepartment,
   CreateDesignation,
+  Gender,
+  MaritalStatus,
+  EmployeeStatus,
 } from '@/lib/models/hr';
 
 export class EmployeeService {
@@ -49,14 +52,14 @@ export class EmployeeService {
         designation_id: data.designationId,
         branch_id: data.branchId,
         employment_type_id: data.employmentTypeId,
-        grade_id: data.employeeGradeId,
+        grade_id: data.gradeId,
         reports_to: data.reportsTo,
         // Contact
         personal_email: data.personalEmail,
         company_email: data.companyEmail,
-        mobile_phone: data.mobileNo,
+        mobile_phone: data.mobilePhone,
         emergency_contact_name: data.emergencyContactName,
-        emergency_contact_phone: data.emergencyContactNo,
+        emergency_contact_phone: data.emergencyContactPhone,
         // Address
         current_address: data.currentAddress,
         permanent_address: data.permanentAddress,
@@ -68,11 +71,10 @@ export class EmployeeService {
         sss_no: data.sssNo,
         philhealth_no: data.philhealthNo,
         pagibig_no: data.pagibigNo,
-        // Tax
-        tax_status: data.taxStatus || 'S',
-        qualified_dependents: data.qualifiedDependents || 0,
         // Status
         status: 'Active',
+        salary_mode: data.salaryMode,
+        payment_days_basis: data.paymentDaysBasis,
       })
       .select()
       .single();
@@ -122,7 +124,7 @@ export class EmployeeService {
       designationName: employee.designation?.designation_name,
       branchName: employee.branch?.branch_name,
       employmentTypeName: employee.employment_type?.employment_type_name,
-      employeeGradeName: employee.employee_grade?.grade_name,
+      gradeName: employee.employee_grade?.grade_name,
       reportsToName: employee.reports_to_employee
         ? `${employee.reports_to_employee.first_name} ${employee.reports_to_employee.last_name}`
         : undefined,
@@ -225,13 +227,13 @@ export class EmployeeService {
     if (data.designationId !== undefined) updateData.designation_id = data.designationId;
     if (data.branchId !== undefined) updateData.branch_id = data.branchId;
     if (data.employmentTypeId !== undefined) updateData.employment_type_id = data.employmentTypeId;
-    if (data.employeeGradeId !== undefined) updateData.grade_id = data.employeeGradeId;
+    if (data.gradeId !== undefined) updateData.grade_id = data.gradeId;
     if (data.reportsTo !== undefined) updateData.reports_to = data.reportsTo;
     if (data.personalEmail !== undefined) updateData.personal_email = data.personalEmail;
     if (data.companyEmail !== undefined) updateData.company_email = data.companyEmail;
-    if (data.mobileNo !== undefined) updateData.mobile_phone = data.mobileNo;
+    if (data.mobilePhone !== undefined) updateData.mobile_phone = data.mobilePhone;
     if (data.emergencyContactName !== undefined) updateData.emergency_contact_name = data.emergencyContactName;
-    if (data.emergencyContactNo !== undefined) updateData.emergency_contact_phone = data.emergencyContactNo;
+    if (data.emergencyContactPhone !== undefined) updateData.emergency_contact_phone = data.emergencyContactPhone;
     if (data.currentAddress !== undefined) updateData.current_address = data.currentAddress;
     if (data.permanentAddress !== undefined) updateData.permanent_address = data.permanentAddress;
     if (data.bankName !== undefined) updateData.bank_name = data.bankName;
@@ -240,8 +242,6 @@ export class EmployeeService {
     if (data.sssNo !== undefined) updateData.sss_no = data.sssNo;
     if (data.philhealthNo !== undefined) updateData.philhealth_no = data.philhealthNo;
     if (data.pagibigNo !== undefined) updateData.pagibig_no = data.pagibigNo;
-    if (data.taxStatus !== undefined) updateData.tax_status = data.taxStatus;
-    if (data.qualifiedDependents !== undefined) updateData.qualified_dependents = data.qualifiedDependents;
 
     updateData.updated_at = new Date().toISOString();
 
@@ -315,12 +315,12 @@ export class EmployeeService {
     return (data || []).map((edu) => ({
       id: edu.id,
       employeeId: edu.employee_id,
-      school: edu.school_university,
+      schoolUniversity: edu.school_university,
       qualification: edu.qualification,
       level: edu.level,
-      yearOfPassing: edu.year_of_graduation,
-      classOrPercentage: edu.class_grade,
-      majorSubject: edu.field_of_study,
+      yearOfGraduation: edu.year_of_graduation,
+      classGrade: edu.class_grade,
+      fieldOfStudy: edu.field_of_study,
       createdAt: new Date(edu.created_at),
     }));
   }
@@ -335,12 +335,12 @@ export class EmployeeService {
       .from('employee_education')
       .insert({
         employee_id: employeeId,
-        school_university: education.school,
+        school_university: education.schoolUniversity,
         qualification: education.qualification,
         level: education.level,
-        year_of_graduation: education.yearOfPassing,
-        class_grade: education.classOrPercentage,
-        field_of_study: education.majorSubject,
+        year_of_graduation: education.yearOfGraduation,
+        class_grade: education.classGrade,
+        field_of_study: education.fieldOfStudy,
       })
       .select()
       .single();
@@ -352,12 +352,12 @@ export class EmployeeService {
     return {
       id: data.id,
       employeeId: data.employee_id,
-      school: data.school_university,
+      schoolUniversity: data.school_university,
       qualification: data.qualification,
       level: data.level,
-      yearOfPassing: data.year_of_graduation,
-      classOrPercentage: data.class_grade,
-      majorSubject: data.field_of_study,
+      yearOfGraduation: data.year_of_graduation,
+      classGrade: data.class_grade,
+      fieldOfStudy: data.field_of_study,
       createdAt: new Date(data.created_at),
     };
   }
@@ -451,7 +451,8 @@ export class EmployeeService {
       dependentName: dep.dependent_name,
       relationship: dep.relationship,
       dateOfBirth: dep.date_of_birth ? new Date(dep.date_of_birth) : undefined,
-      isBirQualified: dep.is_qualified_dependent,
+      gender: dep.gender,
+      isQualifiedDependent: dep.is_qualified_dependent,
       createdAt: new Date(dep.created_at),
     }));
   }
@@ -469,7 +470,8 @@ export class EmployeeService {
         dependent_name: dependent.dependentName,
         relationship: dependent.relationship,
         date_of_birth: dependent.dateOfBirth,
-        is_qualified_dependent: dependent.isBirQualified || false,
+        gender: dependent.gender,
+        is_qualified_dependent: dependent.isQualifiedDependent,
       })
       .select()
       .single();
@@ -484,7 +486,8 @@ export class EmployeeService {
       dependentName: data.dependent_name,
       relationship: data.relationship,
       dateOfBirth: data.date_of_birth ? new Date(data.date_of_birth) : undefined,
-      isBirQualified: data.is_qualified_dependent,
+      gender: data.gender,
+      isQualifiedDependent: data.is_qualified_dependent,
       createdAt: new Date(data.created_at),
     };
   }
@@ -498,10 +501,13 @@ export class EmployeeService {
       .from('departments')
       .insert({
         org_id: data.orgId,
+        department_code: data.departmentCode,
         department_name: data.departmentName,
-        parent_id: data.parentDepartmentId,
+        parent_id: data.parentId,
         company_id: data.companyId,
-        is_group: data.isGroup || false,
+        is_group: data.isGroup,
+        cost_center_id: data.costCenterId,
+        payroll_cost_center_id: data.payrollCostCenterId,
       })
       .select()
       .single();
@@ -513,12 +519,18 @@ export class EmployeeService {
     return {
       id: department.id,
       orgId: department.org_id,
+      departmentCode: department.department_code,
       departmentName: department.department_name,
-      parentDepartmentId: department.parent_id,
+      parentId: department.parent_id,
       companyId: department.company_id,
       isGroup: department.is_group,
+      lft: department.lft,
+      rgt: department.rgt,
+      costCenterId: department.cost_center_id,
+      payrollCostCenterId: department.payroll_cost_center_id,
       isActive: department.is_active,
       createdAt: new Date(department.created_at),
+      updatedAt: new Date(department.updated_at),
     };
   }
 
@@ -539,12 +551,18 @@ export class EmployeeService {
     return (data || []).map((dept) => ({
       id: dept.id,
       orgId: dept.org_id,
+      departmentCode: dept.department_code,
       departmentName: dept.department_name,
-      parentDepartmentId: dept.parent_id,
+      parentId: dept.parent_id,
       companyId: dept.company_id,
       isGroup: dept.is_group,
+      lft: dept.lft,
+      rgt: dept.rgt,
+      costCenterId: dept.cost_center_id,
+      payrollCostCenterId: dept.payroll_cost_center_id,
       isActive: dept.is_active,
       createdAt: new Date(dept.created_at),
+      updatedAt: new Date(dept.updated_at),
     }));
   }
 
@@ -557,6 +575,7 @@ export class EmployeeService {
       .from('designations')
       .insert({
         org_id: data.orgId,
+        designation_code: data.designationCode,
         designation_name: data.designationName,
         description: data.description,
       })
@@ -570,10 +589,12 @@ export class EmployeeService {
     return {
       id: designation.id,
       orgId: designation.org_id,
+      designationCode: designation.designation_code,
       designationName: designation.designation_name,
       description: designation.description,
       isActive: designation.is_active,
       createdAt: new Date(designation.created_at),
+      updatedAt: new Date(designation.updated_at),
     };
   }
 
@@ -594,28 +615,42 @@ export class EmployeeService {
     return (data || []).map((des) => ({
       id: des.id,
       orgId: des.org_id,
+      designationCode: des.designation_code,
       designationName: des.designation_name,
       description: des.description,
       isActive: des.is_active,
       createdAt: new Date(des.created_at),
+      updatedAt: new Date(des.updated_at),
     }));
   }
 
   // ==================== BRANCHES ====================
 
-  async createBranch(
-    orgId: string,
-    branchName: string,
-    address?: string
-  ): Promise<Branch> {
+  async createBranch(data: {
+    orgId: string;
+    branchCode?: string;
+    branchName: string;
+    addressLine1?: string;
+    addressLine2?: string;
+    city?: string;
+    stateProvince?: string;
+    postalCode?: string;
+    country?: string;
+  }): Promise<Branch> {
     const supabase = await createClient();
 
     const { data: branch, error } = await supabase
       .from('branches')
       .insert({
-        org_id: orgId,
-        branch_name: branchName,
-        address: address,
+        org_id: data.orgId,
+        branch_code: data.branchCode,
+        branch_name: data.branchName,
+        address_line1: data.addressLine1,
+        address_line2: data.addressLine2,
+        city: data.city,
+        state_province: data.stateProvince,
+        postal_code: data.postalCode,
+        country: data.country || 'Philippines',
       })
       .select()
       .single();
@@ -627,10 +662,17 @@ export class EmployeeService {
     return {
       id: branch.id,
       orgId: branch.org_id,
+      branchCode: branch.branch_code,
       branchName: branch.branch_name,
-      address: branch.address,
+      addressLine1: branch.address_line1,
+      addressLine2: branch.address_line2,
+      city: branch.city,
+      stateProvince: branch.state_province,
+      postalCode: branch.postal_code,
+      country: branch.country,
       isActive: branch.is_active,
       createdAt: new Date(branch.created_at),
+      updatedAt: new Date(branch.updated_at),
     };
   }
 
@@ -651,10 +693,17 @@ export class EmployeeService {
     return (data || []).map((br) => ({
       id: br.id,
       orgId: br.org_id,
+      branchCode: br.branch_code,
       branchName: br.branch_name,
-      address: br.address,
+      addressLine1: br.address_line1,
+      addressLine2: br.address_line2,
+      city: br.city,
+      stateProvince: br.state_province,
+      postalCode: br.postal_code,
+      country: br.country,
       isActive: br.is_active,
       createdAt: new Date(br.created_at),
+      updatedAt: new Date(br.updated_at),
     }));
   }
 
@@ -663,8 +712,10 @@ export class EmployeeService {
   async createEmployeeGrade(
     orgId: string,
     gradeName: string,
+    description?: string,
     defaultBasePay?: number,
-    defaultLeavePolicy?: string
+    minBasePay?: number,
+    maxBasePay?: number
   ): Promise<EmployeeGrade> {
     const supabase = await createClient();
 
@@ -673,8 +724,10 @@ export class EmployeeService {
       .insert({
         org_id: orgId,
         grade_name: gradeName,
-        default_base_pay: defaultBasePay,
-        default_leave_policy_id: defaultLeavePolicy,
+        description: description,
+        default_base_pay: defaultBasePay || 0,
+        min_base_pay: minBasePay,
+        max_base_pay: maxBasePay,
       })
       .select()
       .single();
@@ -687,9 +740,10 @@ export class EmployeeService {
       id: grade.id,
       orgId: grade.org_id,
       gradeName: grade.grade_name,
+      description: grade.description,
       defaultBasePay: grade.default_base_pay,
-      defaultLeavePolicyId: grade.default_leave_policy_id,
-      isActive: grade.is_active,
+      minBasePay: grade.min_base_pay,
+      maxBasePay: grade.max_base_pay,
       createdAt: new Date(grade.created_at),
     };
   }
@@ -712,9 +766,10 @@ export class EmployeeService {
       id: gr.id,
       orgId: gr.org_id,
       gradeName: gr.grade_name,
+      description: gr.description,
       defaultBasePay: gr.default_base_pay,
-      defaultLeavePolicyId: gr.default_leave_policy_id,
-      isActive: gr.is_active,
+      minBasePay: gr.min_base_pay,
+      maxBasePay: gr.max_base_pay,
       createdAt: new Date(gr.created_at),
     }));
   }
@@ -723,7 +778,11 @@ export class EmployeeService {
 
   async createEmploymentType(
     orgId: string,
-    employmentTypeName: string
+    typeName: string,
+    description?: string,
+    defaultLeavePolicyId?: string,
+    isRegular?: boolean,
+    isSubjectToStatutory?: boolean
   ): Promise<EmploymentType> {
     const supabase = await createClient();
 
@@ -731,7 +790,11 @@ export class EmployeeService {
       .from('employment_types')
       .insert({
         org_id: orgId,
-        type_name: employmentTypeName,
+        type_name: typeName,
+        description: description,
+        default_leave_policy_id: defaultLeavePolicyId,
+        is_regular: isRegular ?? true,
+        is_subject_to_statutory: isSubjectToStatutory ?? true,
       })
       .select()
       .single();
@@ -743,8 +806,11 @@ export class EmployeeService {
     return {
       id: type.id,
       orgId: type.org_id,
-      employmentTypeName: type.type_name,
-      isActive: type.is_active,
+      typeName: type.type_name,
+      description: type.description,
+      defaultLeavePolicyId: type.default_leave_policy_id,
+      isRegular: type.is_regular,
+      isSubjectToStatutory: type.is_subject_to_statutory,
       createdAt: new Date(type.created_at),
     };
   }
@@ -766,8 +832,11 @@ export class EmployeeService {
     return (data || []).map((et) => ({
       id: et.id,
       orgId: et.org_id,
-      employmentTypeName: et.type_name,
-      isActive: et.is_active,
+      typeName: et.type_name,
+      description: et.description,
+      defaultLeavePolicyId: et.default_leave_policy_id,
+      isRegular: et.is_regular,
+      isSubjectToStatutory: et.is_subject_to_statutory,
       createdAt: new Date(et.created_at),
     }));
   }
@@ -800,44 +869,56 @@ export class EmployeeService {
       firstName: data.first_name as string,
       middleName: data.middle_name as string | undefined,
       lastName: data.last_name as string,
+      suffix: data.suffix as string | undefined,
       fullName: `${data.first_name} ${data.middle_name ? data.middle_name + ' ' : ''}${data.last_name}`,
-      gender: data.gender as string,
+      gender: data.gender as Gender | undefined,
       dateOfBirth: data.date_of_birth ? new Date(data.date_of_birth as string) : undefined,
-      dateOfJoining: new Date(data.date_of_joining as string),
+      maritalStatus: data.marital_status as MaritalStatus | undefined,
+      bloodGroup: data.blood_group as string | undefined,
+      dateOfJoining: data.date_of_joining ? new Date(data.date_of_joining as string) : undefined,
+      dateOfConfirmation: data.date_of_confirmation ? new Date(data.date_of_confirmation as string) : undefined,
+      contractEndDate: data.contract_end_date ? new Date(data.contract_end_date as string) : undefined,
       // Organization
       departmentId: data.department_id as string | undefined,
       designationId: data.designation_id as string | undefined,
       branchId: data.branch_id as string | undefined,
       employmentTypeId: data.employment_type_id as string | undefined,
-      employeeGradeId: data.grade_id as string | undefined,
+      gradeId: data.grade_id as string | undefined,
       reportsTo: data.reports_to as string | undefined,
       // Contact
       personalEmail: data.personal_email as string | undefined,
       companyEmail: data.company_email as string | undefined,
-      mobileNo: data.mobile_phone as string | undefined,
+      mobilePhone: data.mobile_phone as string | undefined,
       emergencyContactName: data.emergency_contact_name as string | undefined,
-      emergencyContactNo: data.emergency_contact_phone as string | undefined,
+      emergencyContactPhone: data.emergency_contact_phone as string | undefined,
+      emergencyContactRelation: data.emergency_contact_relation as string | undefined,
       // Address
       currentAddress: data.current_address as string | undefined,
       permanentAddress: data.permanent_address as string | undefined,
       // Bank
       bankName: data.bank_name as string | undefined,
       bankAccountNo: data.bank_account_no as string | undefined,
+      bankAccountName: data.bank_account_name as string | undefined,
       // PH Statutory
       tinNo: data.tin_no as string | undefined,
       sssNo: data.sss_no as string | undefined,
       philhealthNo: data.philhealth_no as string | undefined,
       pagibigNo: data.pagibig_no as string | undefined,
-      // Tax
-      taxStatus: data.tax_status as string,
-      qualifiedDependents: data.qualified_dependents as number,
+      // Payroll
+      salaryMode: (data.salary_mode as 'Bank' | 'Cash' | 'Cheque') || 'Bank',
+      paymentDaysBasis: (data.payment_days_basis as 'Calendar Days' | 'Working Days') || 'Calendar Days',
+      // User
+      userId: data.user_id as string | undefined,
+      // Photo
+      imageUrl: data.image_url as string | undefined,
       // Status
-      status: data.status as string,
+      status: data.status as EmployeeStatus,
       relievingDate: data.relieving_date ? new Date(data.relieving_date as string) : undefined,
       reasonForLeaving: data.reason_for_leaving as string | undefined,
       // Metadata
       createdAt: new Date(data.created_at as string),
       updatedAt: new Date(data.updated_at as string),
+      createdBy: data.created_by as string | undefined,
     };
   }
 }

@@ -9,9 +9,44 @@ import type {
   PaymentEntry,
   PaymentEntryReference,
   CreatePaymentEntry,
-  UpdatePaymentEntry,
-  PaymentEntryListFilters,
+  PaymentType,
+  PaymentEntryStatus,
+  ModeOfPayment,
 } from '@/lib/models/accounting/payment-entry';
+
+// Service-specific types not in the model
+interface UpdatePaymentEntry {
+  id: string;
+  postingDate?: Date;
+  modeOfPayment?: ModeOfPayment;
+  paidAmount?: number;
+  referenceNumber?: string;
+  referenceDate?: Date;
+  remarks?: string;
+  references?: Array<{
+    referenceDoctype: string;
+    referenceId: string;
+    referenceName: string;
+    allocatedAmount: number;
+    dueDate?: Date;
+    totalAmount?: number;
+    outstandingAmount?: number;
+    exchangeRate?: number;
+  }>;
+}
+
+interface PaymentEntryListFilters {
+  orgId: string;
+  paymentType?: PaymentType;
+  partyType?: string;
+  partyId?: string;
+  status?: PaymentEntryStatus;
+  fromDate?: Date;
+  toDate?: Date;
+  modeOfPayment?: ModeOfPayment;
+  limit?: number;
+  offset?: number;
+}
 import { LedgerService, AccountingError } from './ledger.service';
 import type { GLEntryInput } from '@/lib/models/accounting/gl-entry';
 import { SalesInvoiceService } from '../receivable/sales-invoice.service';
@@ -72,16 +107,17 @@ export class PaymentEntryService {
         paid_to_account_id: input.paidToAccountId,
         paid_amount: input.paidAmount,
         received_amount: input.receivedAmount || input.paidAmount,
-        currency: input.currency || 'PHP',
-        exchange_rate: input.exchangeRate || 1,
+        source_exchange_rate: input.sourceExchangeRate || 1,
         target_exchange_rate: input.targetExchangeRate || 1,
         total_allocated_amount: totalAllocated,
         unallocated_amount: unallocatedAmount,
-        difference_amount: input.differenceAmount || 0,
         status: 'Draft',
-        reference_no: input.referenceNo,
+        reference_number: input.referenceNumber,
         reference_date: input.referenceDate?.toISOString().split('T')[0],
+        cheque_number: input.chequeNumber,
+        cheque_date: input.chequeDate?.toISOString().split('T')[0],
         cost_center_id: input.costCenterId,
+        project_id: input.projectId,
         remarks: input.remarks,
       })
       .select()
@@ -98,11 +134,8 @@ export class PaymentEntryService {
         idx,
         reference_doctype: ref.referenceDoctype,
         reference_id: ref.referenceId,
-        due_date: ref.dueDate?.toISOString().split('T')[0],
-        total_amount: ref.totalAmount,
-        outstanding_amount: ref.outstandingAmount,
+        reference_name: ref.referenceName,
         allocated_amount: ref.allocatedAmount,
-        exchange_rate: ref.exchangeRate || 1,
       }));
 
       const { error: refError } = await supabase
@@ -219,7 +252,7 @@ export class PaymentEntryService {
     if (input.postingDate) updateData.posting_date = input.postingDate.toISOString().split('T')[0];
     if (input.modeOfPayment !== undefined) updateData.mode_of_payment = input.modeOfPayment;
     if (input.paidAmount !== undefined) updateData.paid_amount = input.paidAmount;
-    if (input.referenceNo !== undefined) updateData.reference_no = input.referenceNo;
+    if (input.referenceNumber !== undefined) updateData.reference_number = input.referenceNumber;
     if (input.referenceDate) updateData.reference_date = input.referenceDate.toISOString().split('T')[0];
     if (input.remarks !== undefined) updateData.remarks = input.remarks;
 
@@ -243,11 +276,12 @@ export class PaymentEntryService {
       // Delete and recreate references
       await supabase.from('payment_entry_references').delete().eq('payment_entry_id', input.id);
 
-      const refsToInsert = input.references.map((ref, idx) => ({
+      const refsToInsert = input.references.map((ref, idx: number) => ({
         payment_entry_id: input.id,
         idx,
         reference_doctype: ref.referenceDoctype,
         reference_id: ref.referenceId,
+        reference_name: ref.referenceName,
         due_date: ref.dueDate?.toISOString().split('T')[0],
         total_amount: ref.totalAmount,
         outstanding_amount: ref.outstandingAmount,
@@ -291,15 +325,19 @@ export class PaymentEntryService {
       // Debit: Bank/Cash Account
       glEntries.push({
         orgId: payment.orgId,
-        accountId: payment.paidToAccountId,
+        accountId: payment.paidToAccountId!,
         postingDate: payment.postingDate,
         voucherType: 'Payment Entry',
         voucherId: payment.id,
-        voucherNo: payment.paymentNumber,
+        voucherNo: payment.voucherNo,
         debit: payment.receivedAmount,
         credit: 0,
-        currency: payment.currency,
-        exchangeRate: payment.exchangeRate,
+        accountCurrency: payment.paidToAccountCurrency,
+        debitInAccountCurrency: payment.receivedAmountInAccountCurrency,
+        creditInAccountCurrency: 0,
+        exchangeRate: payment.targetExchangeRate,
+        isOpening: false,
+        isAdvance: false,
         remarks: `Payment received from ${payment.partyName}`,
         costCenterId: payment.costCenterId,
       });
@@ -307,17 +345,21 @@ export class PaymentEntryService {
       // Credit: Receivable Account
       glEntries.push({
         orgId: payment.orgId,
-        accountId: payment.paidFromAccountId,
+        accountId: payment.paidFromAccountId!,
         postingDate: payment.postingDate,
         voucherType: 'Payment Entry',
         voucherId: payment.id,
-        voucherNo: payment.paymentNumber,
+        voucherNo: payment.voucherNo,
         partyType: payment.partyType,
         partyId: payment.partyId,
         debit: 0,
         credit: payment.paidAmount,
-        currency: payment.currency,
-        exchangeRate: payment.exchangeRate,
+        accountCurrency: payment.paidFromAccountCurrency,
+        debitInAccountCurrency: 0,
+        creditInAccountCurrency: payment.paidAmountInAccountCurrency,
+        exchangeRate: payment.sourceExchangeRate,
+        isOpening: false,
+        isAdvance: false,
         remarks: `Payment received from ${payment.partyName}`,
         costCenterId: payment.costCenterId,
       });
@@ -328,17 +370,21 @@ export class PaymentEntryService {
       // Debit: Payable Account
       glEntries.push({
         orgId: payment.orgId,
-        accountId: payment.paidFromAccountId,
+        accountId: payment.paidFromAccountId!,
         postingDate: payment.postingDate,
         voucherType: 'Payment Entry',
         voucherId: payment.id,
-        voucherNo: payment.paymentNumber,
+        voucherNo: payment.voucherNo,
         partyType: payment.partyType,
         partyId: payment.partyId,
         debit: payment.paidAmount,
         credit: 0,
-        currency: payment.currency,
-        exchangeRate: payment.exchangeRate,
+        accountCurrency: payment.paidFromAccountCurrency,
+        debitInAccountCurrency: payment.paidAmountInAccountCurrency,
+        creditInAccountCurrency: 0,
+        exchangeRate: payment.sourceExchangeRate,
+        isOpening: false,
+        isAdvance: false,
         remarks: `Payment made to ${payment.partyName}`,
         costCenterId: payment.costCenterId,
       });
@@ -346,15 +392,19 @@ export class PaymentEntryService {
       // Credit: Bank/Cash Account
       glEntries.push({
         orgId: payment.orgId,
-        accountId: payment.paidToAccountId,
+        accountId: payment.paidToAccountId!,
         postingDate: payment.postingDate,
         voucherType: 'Payment Entry',
         voucherId: payment.id,
-        voucherNo: payment.paymentNumber,
+        voucherNo: payment.voucherNo,
         debit: 0,
         credit: payment.receivedAmount,
-        currency: payment.currency,
-        exchangeRate: payment.exchangeRate,
+        accountCurrency: payment.paidToAccountCurrency,
+        debitInAccountCurrency: 0,
+        creditInAccountCurrency: payment.receivedAmountInAccountCurrency,
+        exchangeRate: payment.targetExchangeRate,
+        isOpening: false,
+        isAdvance: false,
         remarks: `Payment made to ${payment.partyName}`,
         costCenterId: payment.costCenterId,
       });
@@ -364,68 +414,67 @@ export class PaymentEntryService {
 
       glEntries.push({
         orgId: payment.orgId,
-        accountId: payment.paidToAccountId,
+        accountId: payment.paidToAccountId!,
         postingDate: payment.postingDate,
         voucherType: 'Payment Entry',
         voucherId: payment.id,
-        voucherNo: payment.paymentNumber,
+        voucherNo: payment.voucherNo,
         debit: payment.receivedAmount,
         credit: 0,
-        currency: payment.currency,
+        accountCurrency: payment.paidToAccountCurrency,
+        debitInAccountCurrency: payment.receivedAmountInAccountCurrency,
+        creditInAccountCurrency: 0,
         exchangeRate: payment.targetExchangeRate,
+        isOpening: false,
+        isAdvance: false,
         remarks: 'Internal fund transfer',
         costCenterId: payment.costCenterId,
       });
 
       glEntries.push({
         orgId: payment.orgId,
-        accountId: payment.paidFromAccountId,
+        accountId: payment.paidFromAccountId!,
         postingDate: payment.postingDate,
         voucherType: 'Payment Entry',
         voucherId: payment.id,
-        voucherNo: payment.paymentNumber,
+        voucherNo: payment.voucherNo,
         debit: 0,
         credit: payment.paidAmount,
-        currency: payment.currency,
-        exchangeRate: payment.exchangeRate,
+        accountCurrency: payment.paidFromAccountCurrency,
+        debitInAccountCurrency: 0,
+        creditInAccountCurrency: payment.paidAmountInAccountCurrency,
+        exchangeRate: payment.sourceExchangeRate,
+        isOpening: false,
+        isAdvance: false,
         remarks: 'Internal fund transfer',
         costCenterId: payment.costCenterId,
       });
     }
 
     // Handle exchange rate difference
-    if (payment.differenceAmount !== 0) {
-      // Get exchange gain/loss account
-      const { data: accounts } = await supabase
-        .from('accounts')
-        .select('id')
-        .eq('org_id', payment.orgId)
-        .eq('code', payment.differenceAmount > 0 ? '4501' : '6201')  // Exchange gain or loss
-        .single();
-
-      if (accounts) {
-        glEntries.push({
-          orgId: payment.orgId,
-          accountId: accounts.id,
-          postingDate: payment.postingDate,
-          voucherType: 'Payment Entry',
-          voucherId: payment.id,
-          voucherNo: payment.paymentNumber,
-          debit: payment.differenceAmount < 0 ? Math.abs(payment.differenceAmount) : 0,
-          credit: payment.differenceAmount > 0 ? payment.differenceAmount : 0,
-          currency: payment.currency,
-          exchangeRate: payment.exchangeRate,
-          remarks: 'Exchange gain/loss',
-          costCenterId: payment.costCenterId,
-        });
-      }
+    if (payment.differenceAmount !== 0 && payment.writeOffAccountId) {
+      glEntries.push({
+        orgId: payment.orgId,
+        accountId: payment.writeOffAccountId,
+        postingDate: payment.postingDate,
+        voucherType: 'Payment Entry',
+        voucherId: payment.id,
+        voucherNo: payment.voucherNo,
+        debit: payment.differenceAmount < 0 ? Math.abs(payment.differenceAmount) : 0,
+        credit: payment.differenceAmount > 0 ? payment.differenceAmount : 0,
+        accountCurrency: payment.paidFromAccountCurrency,
+        debitInAccountCurrency: payment.differenceAmount < 0 ? Math.abs(payment.differenceAmount) : 0,
+        creditInAccountCurrency: payment.differenceAmount > 0 ? payment.differenceAmount : 0,
+        exchangeRate: 1,
+        isOpening: false,
+        isAdvance: false,
+        remarks: 'Exchange gain/loss',
+        costCenterId: payment.costCenterId,
+      });
     }
 
     // Post GL entries
-    await LedgerService.makeGLEntries(glEntries, {
-      validateBalance: true,
-      postingDate: payment.postingDate,
-    });
+    await LedgerService.makeGLEntries(glEntries);
 
     // Create payment ledger entries for allocations
     if (payment.references && payment.references.length > 0) {
@@ -441,11 +490,11 @@ export class PaymentEntryService {
           party_id: payment.partyId,
           voucher_type: 'Payment Entry',
           voucher_id: payment.id,
-          voucher_no: payment.paymentNumber,
+          voucher_no: payment.voucherNo,
           against_voucher_type: ref.referenceDoctype,
           against_voucher_id: ref.referenceId,
           amount: -ref.allocatedAmount,  // Negative to reduce outstanding
-          currency: payment.currency,
+          currency: payment.paidFromAccountCurrency,
           exchange_rate: ref.exchangeRate,
         });
 
@@ -470,12 +519,12 @@ export class PaymentEntryService {
         party_id: payment.partyId,
         voucher_type: 'Payment Entry',
         voucher_id: payment.id,
-        voucher_no: payment.paymentNumber,
+        voucher_no: payment.voucherNo,
         against_voucher_type: 'Payment Entry',
         against_voucher_id: payment.id,
         amount: -payment.unallocatedAmount,  // Negative = advance/credit
-        currency: payment.currency,
-        exchange_rate: payment.exchangeRate,
+        currency: payment.paidFromAccountCurrency,
+        exchange_rate: payment.sourceExchangeRate,
       });
     }
 
@@ -715,7 +764,7 @@ export class PaymentEntryService {
         reference_id: alloc.referenceId,
         allocated_amount: alloc.allocatedAmount,
         due_date: dueDate?.toISOString().split('T')[0],
-        exchange_rate: payment.exchangeRate,
+        exchange_rate: payment.sourceExchangeRate,
       });
 
       // Create allocation entry in payment ledger
@@ -727,12 +776,12 @@ export class PaymentEntryService {
         party_id: payment.partyId,
         voucher_type: 'Payment Entry',
         voucher_id: payment.id,
-        voucher_no: payment.paymentNumber,
+        voucher_no: payment.voucherNo,
         against_voucher_type: alloc.referenceDoctype,
         against_voucher_id: alloc.referenceId,
         amount: -alloc.allocatedAmount,
-        currency: payment.currency,
-        exchange_rate: payment.exchangeRate,
+        currency: payment.paidFromAccountCurrency,
+        exchange_rate: payment.sourceExchangeRate,
       });
 
       // Update invoice payment status
@@ -763,12 +812,12 @@ export class PaymentEntryService {
         party_id: payment.partyId,
         voucher_type: 'Payment Entry',
         voucher_id: payment.id,
-        voucher_no: payment.paymentNumber,
+        voucher_no: payment.voucherNo,
         against_voucher_type: 'Payment Entry',
         against_voucher_id: payment.id,
         amount: -newUnallocated,
-        currency: payment.currency,
-        exchange_rate: payment.exchangeRate,
+        currency: payment.paidFromAccountCurrency,
+        exchange_rate: payment.sourceExchangeRate,
       });
     }
 
@@ -791,7 +840,7 @@ export class PaymentEntryService {
     return {
       id: row.id,
       orgId: row.org_id,
-      paymentNumber: row.payment_number,
+      voucherNo: row.voucher_no || row.payment_number || '',
       namingSeries: row.naming_series || 'PAY',
       paymentType: row.payment_type,
       postingDate: new Date(row.posting_date),
@@ -803,16 +852,24 @@ export class PaymentEntryService {
       paidToAccountId: row.paid_to_account_id,
       paidAmount: parseFloat(row.paid_amount) || 0,
       receivedAmount: parseFloat(row.received_amount) || 0,
-      currency: row.currency || 'PHP',
-      exchangeRate: parseFloat(row.exchange_rate) || 1,
+      paidAmountInAccountCurrency: parseFloat(row.paid_amount_in_account_currency) || 0,
+      receivedAmountInAccountCurrency: parseFloat(row.received_amount_in_account_currency) || 0,
+      paidFromAccountCurrency: row.paid_from_account_currency || 'PHP',
+      paidToAccountCurrency: row.paid_to_account_currency || 'PHP',
+      sourceExchangeRate: parseFloat(row.source_exchange_rate) || 1,
       targetExchangeRate: parseFloat(row.target_exchange_rate) || 1,
       totalAllocatedAmount: parseFloat(row.total_allocated_amount) || 0,
       unallocatedAmount: parseFloat(row.unallocated_amount) || 0,
       differenceAmount: parseFloat(row.difference_amount) || 0,
+      writeOffAccountId: row.write_off_account_id,
       status: row.status,
-      referenceNo: row.reference_no,
+      referenceNumber: row.reference_number,
       referenceDate: row.reference_date ? new Date(row.reference_date) : undefined,
+      chequeNumber: row.cheque_number,
+      chequeDate: row.cheque_date ? new Date(row.cheque_date) : undefined,
+      bankAccount: row.bank_account,
       costCenterId: row.cost_center_id,
+      projectId: row.project_id,
       remarks: row.remarks,
       references: references.map(this.mapDbToReference),
       createdAt: new Date(row.created_at),
@@ -831,11 +888,13 @@ export class PaymentEntryService {
       idx: row.idx,
       referenceDoctype: row.reference_doctype,
       referenceId: row.reference_id,
+      referenceName: row.reference_name || '',
       dueDate: row.due_date ? new Date(row.due_date) : undefined,
       totalAmount: parseFloat(row.total_amount) || 0,
       outstandingAmount: parseFloat(row.outstanding_amount) || 0,
       allocatedAmount: parseFloat(row.allocated_amount) || 0,
       exchangeRate: parseFloat(row.exchange_rate) || 1,
+      exchangeGainLoss: parseFloat(row.exchange_gain_loss) || 0,
       createdAt: new Date(row.created_at),
     };
   }

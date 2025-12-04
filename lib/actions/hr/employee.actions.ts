@@ -421,7 +421,11 @@ export async function createBranch(
   address?: string
 ): Promise<ActionResult> {
   try {
-    const branch = await employeeService.createBranch(orgId, branchName, address);
+    const branch = await employeeService.createBranch({
+      orgId,
+      branchName,
+      addressLine1: address,
+    });
 
     revalidatePath('/payroll/branches');
     revalidatePath('/hr/branches');
@@ -468,14 +472,14 @@ export async function createEmployeeGrade(
   orgId: string,
   gradeName: string,
   defaultBasePay?: number,
-  defaultLeavePolicy?: string
+  description?: string
 ): Promise<ActionResult> {
   try {
     const grade = await employeeService.createEmployeeGrade(
       orgId,
       gradeName,
-      defaultBasePay,
-      defaultLeavePolicy
+      description,
+      defaultBasePay
     );
 
     revalidatePath('/payroll/grades');

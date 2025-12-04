@@ -8,10 +8,36 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { PurchaseInvoiceService, SupplierService } from '@/lib/services/payable';
+import { logAuditEvent } from '@/lib/audit/logger';
 
 // =============================================
-// HELPER: Get current org
+// HELPER: Get current org and user
 // =============================================
+
+interface AuthContext {
+  orgId: string;
+  userId: string;
+}
+
+async function getAuthContext(): Promise<AuthContext | null> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) return null;
+
+  const { data: membership } = await supabase
+    .from('org_members')
+    .select('org_id')
+    .eq('user_id', user.id)
+    .single();
+
+  if (!membership?.org_id) return null;
+
+  return {
+    orgId: membership.org_id,
+    userId: user.id,
+  };
+}
 
 async function getCurrentOrg(): Promise<string | null> {
   const supabase = await createClient();
@@ -46,8 +72,7 @@ export interface ActionResult<T = unknown> {
  * List suppliers
  */
 export async function listSuppliers(options?: {
-  isActive?: boolean;
-  supplierType?: string;
+  supplierType?: 'Company' | 'Individual' | 'Government' | 'Partnership';
   search?: string;
   limit?: number;
 }): Promise<ActionResult> {
@@ -59,7 +84,6 @@ export async function listSuppliers(options?: {
 
     const suppliers = await SupplierService.list({
       orgId,
-      isActive: options?.isActive,
       supplierType: options?.supplierType,
       search: options?.search,
       limit: options?.limit,
@@ -96,10 +120,16 @@ export async function getSupplier(id: string): Promise<ActionResult> {
  */
 export async function createSupplier(data: {
   supplierName: string;
-  supplierType?: string;
+  supplierType?: 'Company' | 'Individual' | 'Government' | 'Partnership';
+  taxCategory?: 'VAT Registered' | 'Non-VAT' | 'Exempt' | 'Zero-Rated' | 'Government';
+  isWhtAgent?: boolean;
+  currency?: string;
+  creditLimit?: number;
+  contactPerson?: string;
   email?: string;
   phone?: string;
-  taxId?: string;
+  mobile?: string;
+  tinNumber?: string;
   paymentTerms?: string;
 }): Promise<ActionResult> {
   try {
@@ -110,7 +140,18 @@ export async function createSupplier(data: {
 
     const supplier = await SupplierService.create({
       orgId,
-      ...data,
+      supplierName: data.supplierName,
+      supplierType: data.supplierType ?? 'Company',
+      taxCategory: data.taxCategory ?? 'VAT Registered',
+      isWhtAgent: data.isWhtAgent ?? false,
+      currency: data.currency ?? 'PHP',
+      creditLimit: data.creditLimit ?? 0,
+      contactPerson: data.contactPerson,
+      email: data.email,
+      phone: data.phone,
+      mobile: data.mobile,
+      tinNumber: data.tinNumber,
+      paymentTerms: data.paymentTerms,
     });
 
     revalidatePath('/expenses/vendors');
@@ -134,11 +175,9 @@ export async function createSupplier(data: {
  */
 export async function listBills(options?: {
   supplierId?: string;
-  status?: string;
+  status?: 'Draft' | 'Submitted' | 'Paid' | 'Partly Paid' | 'Overdue' | 'Cancelled' | 'Return' | 'On Hold';
   fromDate?: string;
   toDate?: string;
-  isPaid?: boolean;
-  search?: string;
   limit?: number;
 }): Promise<ActionResult> {
   try {
@@ -153,8 +192,6 @@ export async function listBills(options?: {
       status: options?.status,
       fromDate: options?.fromDate ? new Date(options.fromDate) : undefined,
       toDate: options?.toDate ? new Date(options.toDate) : undefined,
-      isPaid: options?.isPaid,
-      search: options?.search,
       limit: options?.limit,
     });
 
@@ -196,8 +233,11 @@ export async function createBill(data: {
     itemName: string;
     qty: number;
     rate: number;
+    uom?: string;
     description?: string;
+    discountPercentage?: number;
     taxRate?: number;
+    isFixedAsset?: boolean;
   }>;
   remarks?: string;
 }): Promise<ActionResult> {
@@ -207,21 +247,44 @@ export async function createBill(data: {
       return { success: false, error: 'Organization not found' };
     }
 
+    const auth = await getAuthContext();
     const bill = await PurchaseInvoiceService.create({
       orgId,
+      invoiceType: 'Invoice',
       supplierId: data.supplierId,
       supplierInvoiceNo: data.supplierInvoiceNo,
       postingDate: new Date(data.postingDate),
       dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
-      items: data.items.map((item, idx) => ({
-        idx,
+      currency: 'PHP',
+      exchangeRate: 1,
+      discountAmount: 0,
+      applyWithholdingTax: false,
+      withholdingTaxRate: 0,
+      items: data.items.map((item) => ({
         itemName: item.itemName,
         qty: item.qty,
         rate: item.rate,
+        uom: item.uom ?? 'Unit',
         description: item.description,
-        taxRate: item.taxRate,
+        discountPercentage: item.discountPercentage ?? 0,
+        taxRate: item.taxRate ?? 12,
+        isFixedAsset: item.isFixedAsset ?? false,
       })),
       remarks: data.remarks,
+    });
+
+    // Audit log for bill creation
+    await logAuditEvent({
+      orgId: auth?.orgId,
+      userId: auth?.userId,
+      action: 'create',
+      entityType: 'purchase_invoice',
+      entityId: bill.id,
+      changes: {
+        supplierId: data.supplierId,
+        postingDate: data.postingDate,
+        itemCount: data.items.length,
+      },
     });
 
     revalidatePath('/expenses/bills');
@@ -241,7 +304,25 @@ export async function createBill(data: {
  */
 export async function submitBill(id: string): Promise<ActionResult> {
   try {
-    const bill = await PurchaseInvoiceService.submit(id);
+    const auth = await getAuthContext();
+    if (!auth) {
+      return { success: false, error: 'User not authenticated' };
+    }
+
+    const bill = await PurchaseInvoiceService.submit(id, auth.userId);
+
+    // Audit log for bill submission (financial posting)
+    await logAuditEvent({
+      orgId: auth.orgId,
+      userId: auth.userId,
+      action: 'submit',
+      entityType: 'purchase_invoice',
+      entityId: id,
+      metadata: {
+        severity: 'high',
+        description: 'Bill posted to General Ledger',
+      },
+    });
 
     revalidatePath('/expenses/bills');
     revalidatePath(`/expenses/bills/${id}`);
@@ -261,7 +342,25 @@ export async function submitBill(id: string): Promise<ActionResult> {
  */
 export async function cancelBill(id: string): Promise<ActionResult> {
   try {
-    const bill = await PurchaseInvoiceService.cancel(id);
+    const auth = await getAuthContext();
+    if (!auth) {
+      return { success: false, error: 'User not authenticated' };
+    }
+
+    const bill = await PurchaseInvoiceService.cancel(id, auth.userId);
+
+    // Audit log for bill cancellation (financial reversal)
+    await logAuditEvent({
+      orgId: auth.orgId,
+      userId: auth.userId,
+      action: 'cancel',
+      entityType: 'purchase_invoice',
+      entityId: id,
+      metadata: {
+        severity: 'high',
+        description: 'Bill cancelled and GL entries reversed',
+      },
+    });
 
     revalidatePath('/expenses/bills');
     revalidatePath(`/expenses/bills/${id}`);

@@ -14,32 +14,15 @@ import { createClient } from '@/lib/supabase/server';
 // SCHEMAS
 // =============================================
 
-const CreateLeaveTypeSchema = z.object({
-  orgId: z.string().uuid(),
-  leaveTypeName: z.string().min(1, 'Leave type name is required'),
-  maxLeavesAllowed: z.number().min(0).optional(),
-  applicableAfterDays: z.number().min(0).optional(),
-  maxConsecutiveDays: z.number().min(1).optional(),
-  isCarryForward: z.boolean().optional(),
-  maxCarryForwardDays: z.number().min(0).optional(),
-  isWithoutPay: z.boolean().optional(),
-  allowNegativeBalance: z.boolean().optional(),
-  includeHolidays: z.boolean().optional(),
-  isCompensatory: z.boolean().optional(),
-  isEncashable: z.boolean().optional(),
-  encashmentThresholdDays: z.number().min(0).optional(),
-});
+// Use schemas from models for type safety
+import {
+  createLeaveTypeSchema,
+  createLeaveApplicationSchema,
+  createLeaveAllocationSchema
+} from '@/lib/models/hr/attendance';
 
-const CreateLeaveApplicationSchema = z.object({
-  orgId: z.string().uuid(),
-  employeeId: z.string().uuid(),
-  leaveTypeId: z.string().uuid(),
-  fromDate: z.string(),
-  toDate: z.string(),
-  halfDay: z.boolean().optional(),
-  halfDayDate: z.string().optional(),
-  reason: z.string().optional(),
-});
+const CreateLeaveTypeSchema = createLeaveTypeSchema;
+const CreateLeaveApplicationSchema = createLeaveApplicationSchema;
 
 const ApproveLeaveSchema = z.object({
   leaveApplicationId: z.string().uuid(),
@@ -52,15 +35,7 @@ const RejectLeaveSchema = z.object({
   rejectionReason: z.string().min(1, 'Rejection reason is required'),
 });
 
-const CreateLeaveAllocationSchema = z.object({
-  orgId: z.string().uuid(),
-  employeeId: z.string().uuid(),
-  leaveTypeId: z.string().uuid(),
-  fromDate: z.string(),
-  toDate: z.string(),
-  newLeavesAllocated: z.number().min(0),
-  carryForwardedLeaves: z.number().min(0).optional(),
-});
+const CreateLeaveAllocationSchema = createLeaveAllocationSchema;
 
 // =============================================
 // HELPER: Get current org and user
@@ -245,9 +220,15 @@ export async function createLeaveApplication(
  */
 export async function approveLeaveApplication(
   leaveApplicationId: string,
-  approvedById?: string
+  approvedById?: string,
+  orgId?: string
 ): Promise<ActionResult> {
   try {
+    const resolvedOrgId = orgId || await getCurrentOrg();
+    if (!resolvedOrgId) {
+      return { success: false, error: 'Organization not found' };
+    }
+
     const currentUser = await getCurrentUser();
     const approverId = approvedById || currentUser?.employeeId;
 
@@ -258,6 +239,7 @@ export async function approveLeaveApplication(
     const leaveService = new LeaveService();
     const application = await leaveService.approveLeaveApplication(
       leaveApplicationId,
+      resolvedOrgId,
       approverId
     );
 
@@ -280,9 +262,15 @@ export async function approveLeaveApplication(
 export async function rejectLeaveApplication(
   leaveApplicationId: string,
   rejectionReason: string,
-  rejectedById?: string
+  rejectedById?: string,
+  orgId?: string
 ): Promise<ActionResult> {
   try {
+    const resolvedOrgId = orgId || await getCurrentOrg();
+    if (!resolvedOrgId) {
+      return { success: false, error: 'Organization not found' };
+    }
+
     const currentUser = await getCurrentUser();
     const rejecterId = rejectedById || currentUser?.employeeId;
 
@@ -297,6 +285,7 @@ export async function rejectLeaveApplication(
     const leaveService = new LeaveService();
     const application = await leaveService.rejectLeaveApplication(
       leaveApplicationId,
+      resolvedOrgId,
       rejecterId,
       rejectionReason
     );
@@ -318,11 +307,20 @@ export async function rejectLeaveApplication(
  * Cancel a leave application
  */
 export async function cancelLeaveApplication(
-  leaveApplicationId: string
+  leaveApplicationId: string,
+  orgId?: string
 ): Promise<ActionResult> {
   try {
+    const resolvedOrgId = orgId || await getCurrentOrg();
+    if (!resolvedOrgId) {
+      return { success: false, error: 'Organization not found' };
+    }
+
     const leaveService = new LeaveService();
-    const application = await leaveService.cancelLeaveApplication(leaveApplicationId);
+    const application = await leaveService.cancelLeaveApplication(
+      leaveApplicationId,
+      resolvedOrgId
+    );
 
     revalidatePath('/payroll/leave-applications');
     revalidatePath('/hr/leave-applications');
@@ -471,13 +469,20 @@ export async function listLeaveAllocations(
 export async function getLeaveBalance(
   employeeId: string,
   leaveTypeId: string,
-  asOfDate?: string
+  asOfDate?: string,
+  orgId?: string
 ): Promise<ActionResult> {
   try {
+    const resolvedOrgId = orgId || await getCurrentOrg();
+    if (!resolvedOrgId) {
+      return { success: false, error: 'Organization not found' };
+    }
+
     const leaveService = new LeaveService();
     const balance = await leaveService.getLeaveBalance(
       employeeId,
       leaveTypeId,
+      resolvedOrgId,
       asOfDate ? new Date(asOfDate) : undefined
     );
 
@@ -550,7 +555,7 @@ export async function bulkAllocateLeaves(
           newLeavesAllocated,
           fromDate: new Date(fromDate),
           toDate: new Date(toDate),
-          carryForwardedLeaves: carryForwardedLeaves || 0,
+          carryForwardLeaves: carryForwardedLeaves || 0,
         });
         results.success.push(employeeId);
       } catch (error) {

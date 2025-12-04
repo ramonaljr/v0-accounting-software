@@ -98,10 +98,4 @@ export interface WarehouseListFilters {
   search?: string;
 }
 
-// Warehouse stock summary
-export interface WarehouseStockSummary {
-  warehouseId: string;
-  warehouseName: string;
-  totalItems: number;
-  totalValue: number;
-}
+// NOTE: WarehouseStockSummary is exported from './bin' to avoid duplication

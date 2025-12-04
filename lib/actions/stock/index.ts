@@ -8,10 +8,36 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { ItemService, WarehouseService, StockEntryService, StockLedgerService } from '@/lib/services/stock';
+import { logAuditEvent } from '@/lib/audit/logger';
 
 // =============================================
-// HELPER: Get current org
+// HELPER: Get current org and user
 // =============================================
+
+interface AuthContext {
+  orgId: string;
+  userId: string;
+}
+
+async function getAuthContext(): Promise<AuthContext | null> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) return null;
+
+  const { data: membership } = await supabase
+    .from('org_members')
+    .select('org_id')
+    .eq('user_id', user.id)
+    .single();
+
+  if (!membership?.org_id) return null;
+
+  return {
+    orgId: membership.org_id,
+    userId: user.id,
+  };
+}
 
 async function getCurrentOrg(): Promise<string | null> {
   const supabase = await createClient();
@@ -114,6 +140,7 @@ export async function createItem(data: {
   standardRate?: number;
   reorderLevel?: number;
   reorderQty?: number;
+  safetyStock?: number;
   defaultWarehouseId?: string;
 }): Promise<ActionResult> {
   try {
@@ -124,7 +151,23 @@ export async function createItem(data: {
 
     const item = await ItemService.create({
       orgId,
-      ...data,
+      itemName: data.itemName,
+      itemCode: data.itemCode,
+      description: data.description,
+      itemGroupId: data.itemGroupId,
+      stockUomId: data.stockUomId,
+      isStockItem: data.isStockItem ?? true,
+      valuationMethod: 'Moving Average',
+      hasSerialNo: false,
+      hasBatchNo: false,
+      hasExpiryDate: false,
+      isPurchaseItem: data.isPurchaseItem ?? true,
+      isSalesItem: data.isSalesItem ?? true,
+      standardRate: data.standardRate ?? 0,
+      reorderLevel: data.reorderLevel ?? 0,
+      reorderQty: data.reorderQty ?? 0,
+      safetyStock: data.safetyStock ?? 0,
+      defaultWarehouseId: data.defaultWarehouseId,
     });
 
     revalidatePath('/inventory/items');
@@ -252,7 +295,7 @@ export async function listWarehouses(): Promise<ActionResult> {
       return { success: false, error: 'Organization not found' };
     }
 
-    const warehouses = await WarehouseService.list(orgId);
+    const warehouses = await WarehouseService.list({ orgId });
     return { success: true, data: warehouses };
   } catch (error) {
     console.error('[listWarehouses] Error:', error);
@@ -269,9 +312,11 @@ export async function listWarehouses(): Promise<ActionResult> {
 export async function createWarehouse(data: {
   warehouseName: string;
   warehouseCode?: string;
-  warehouseType?: string;
-  address?: string;
-  parentWarehouseId?: string;
+  addressLine1?: string;
+  city?: string;
+  country?: string;
+  parentId?: string;
+  isGroup?: boolean;
 }): Promise<ActionResult> {
   try {
     const orgId = await getCurrentOrg();
@@ -281,7 +326,14 @@ export async function createWarehouse(data: {
 
     const warehouse = await WarehouseService.create({
       orgId,
-      ...data,
+      warehouseName: data.warehouseName,
+      warehouseCode: data.warehouseCode,
+      addressLine1: data.addressLine1,
+      city: data.city,
+      country: data.country ?? 'Philippines',
+      parentId: data.parentId,
+      isGroup: data.isGroup ?? false,
+      isRejectedWarehouse: false,
     });
 
     revalidatePath('/inventory/warehouses');
@@ -301,7 +353,7 @@ export async function createWarehouse(data: {
  */
 export async function getWarehouseStock(warehouseId: string): Promise<ActionResult> {
   try {
-    const stock = await WarehouseService.getStock(warehouseId);
+    const stock = await WarehouseService.getStockSummary(warehouseId);
     return { success: true, data: stock };
   } catch (error) {
     console.error('[getWarehouseStock] Error:', error);
@@ -320,7 +372,7 @@ export async function getWarehouseStock(warehouseId: string): Promise<ActionResu
  * Create stock entry (receipt, issue, transfer)
  */
 export async function createStockEntry(data: {
-  stockEntryType: 'Material Receipt' | 'Material Issue' | 'Material Transfer';
+  purpose: 'Material Receipt' | 'Material Issue' | 'Material Transfer';
   postingDate: string;
   postingTime?: string;
   fromWarehouseId?: string;
@@ -329,7 +381,7 @@ export async function createStockEntry(data: {
   items: Array<{
     itemId: string;
     qty: number;
-    rate?: number;
+    basicRate?: number;
     serialNo?: string;
     batchNo?: string;
   }>;
@@ -340,15 +392,39 @@ export async function createStockEntry(data: {
       return { success: false, error: 'Organization not found' };
     }
 
+    const auth = await getAuthContext();
     const entry = await StockEntryService.create({
       orgId,
-      stockEntryType: data.stockEntryType,
+      purpose: data.purpose,
       postingDate: new Date(data.postingDate),
       postingTime: data.postingTime || '12:00:00',
       fromWarehouseId: data.fromWarehouseId,
       toWarehouseId: data.toWarehouseId,
       remarks: data.remarks,
-      items: data.items,
+      items: data.items.map((item) => ({
+        itemId: item.itemId,
+        qty: item.qty,
+        basicRate: item.basicRate,
+        serialNo: item.serialNo,
+        batchNo: item.batchNo,
+        isFinishedItem: false,
+        isScrapItem: false,
+      })),
+    });
+
+    // Audit log for stock entry creation
+    await logAuditEvent({
+      orgId: auth?.orgId,
+      userId: auth?.userId,
+      action: 'create',
+      entityType: 'stock_entry',
+      entityId: entry.id,
+      changes: {
+        purpose: data.purpose,
+        itemCount: data.items.length,
+        fromWarehouseId: data.fromWarehouseId,
+        toWarehouseId: data.toWarehouseId,
+      },
     });
 
     revalidatePath('/inventory/stock-entries');
@@ -368,10 +444,10 @@ export async function createStockEntry(data: {
  * List stock entries
  */
 export async function listStockEntries(options?: {
-  stockEntryType?: string;
+  purpose?: 'Material Receipt' | 'Material Issue' | 'Material Transfer' | 'Material Transfer for Manufacture' | 'Manufacture' | 'Repack' | 'Send to Subcontractor';
   fromDate?: string;
   toDate?: string;
-  status?: string;
+  status?: 'Draft' | 'Submitted' | 'Cancelled';
   limit?: number;
   offset?: number;
 }): Promise<ActionResult> {
@@ -383,10 +459,10 @@ export async function listStockEntries(options?: {
 
     const entries = await StockEntryService.list({
       orgId,
-      stockEntryType: options?.stockEntryType as any,
+      purpose: options?.purpose,
       fromDate: options?.fromDate ? new Date(options.fromDate) : undefined,
       toDate: options?.toDate ? new Date(options.toDate) : undefined,
-      status: options?.status as any,
+      status: options?.status,
       limit: options?.limit,
       offset: options?.offset,
     });
@@ -406,7 +482,25 @@ export async function listStockEntries(options?: {
  */
 export async function submitStockEntry(id: string): Promise<ActionResult> {
   try {
-    const entry = await StockEntryService.submit(id);
+    const auth = await getAuthContext();
+    if (!auth) {
+      return { success: false, error: 'User not authenticated' };
+    }
+
+    const entry = await StockEntryService.submit(id, auth.userId);
+
+    // Audit log for stock entry submission (inventory movement)
+    await logAuditEvent({
+      orgId: auth.orgId,
+      userId: auth.userId,
+      action: 'submit',
+      entityType: 'stock_entry',
+      entityId: id,
+      metadata: {
+        severity: 'high',
+        description: 'Stock entry posted - inventory levels updated',
+      },
+    });
 
     revalidatePath('/inventory/stock-entries');
     revalidatePath(`/inventory/stock-entries/${id}`);
@@ -427,7 +521,25 @@ export async function submitStockEntry(id: string): Promise<ActionResult> {
  */
 export async function cancelStockEntry(id: string): Promise<ActionResult> {
   try {
-    const entry = await StockEntryService.cancel(id);
+    const auth = await getAuthContext();
+    if (!auth) {
+      return { success: false, error: 'User not authenticated' };
+    }
+
+    const entry = await StockEntryService.cancel(id, auth.userId);
+
+    // Audit log for stock entry cancellation
+    await logAuditEvent({
+      orgId: auth.orgId,
+      userId: auth.userId,
+      action: 'cancel',
+      entityType: 'stock_entry',
+      entityId: id,
+      metadata: {
+        severity: 'high',
+        description: 'Stock entry cancelled - inventory levels reversed',
+      },
+    });
 
     revalidatePath('/inventory/stock-entries');
     revalidatePath(`/inventory/stock-entries/${id}`);
@@ -448,11 +560,11 @@ export async function cancelStockEntry(id: string): Promise<ActionResult> {
 // =============================================
 
 /**
- * Get stock balance
+ * Get stock balance for a specific item and warehouse
  */
 export async function getStockBalance(options: {
-  itemId?: string;
-  warehouseId?: string;
+  itemId: string;
+  warehouseId: string;
   asOfDate?: string;
 }): Promise<ActionResult> {
   try {
@@ -461,12 +573,11 @@ export async function getStockBalance(options: {
       return { success: false, error: 'Organization not found' };
     }
 
-    const balance = await StockLedgerService.getStockBalance({
-      orgId,
-      itemId: options.itemId,
-      warehouseId: options.warehouseId,
-      asOfDate: options.asOfDate ? new Date(options.asOfDate) : undefined,
-    });
+    const balance = await StockLedgerService.getStockBalance(
+      options.itemId,
+      options.warehouseId,
+      options.asOfDate ? new Date(options.asOfDate) : undefined
+    );
 
     return { success: true, data: balance };
   } catch (error) {
@@ -479,10 +590,10 @@ export async function getStockBalance(options: {
 }
 
 /**
- * Get stock ledger entries
+ * Get stock ledger entries for an item
  */
 export async function getStockLedger(options: {
-  itemId?: string;
+  itemId: string;
   warehouseId?: string;
   fromDate?: string;
   toDate?: string;
@@ -494,9 +605,7 @@ export async function getStockLedger(options: {
       return { success: false, error: 'Organization not found' };
     }
 
-    const entries = await StockLedgerService.getStockLedgerEntries({
-      orgId,
-      itemId: options.itemId,
+    const entries = await StockLedgerService.getEntriesByItem(options.itemId, {
       warehouseId: options.warehouseId,
       fromDate: options.fromDate ? new Date(options.fromDate) : undefined,
       toDate: options.toDate ? new Date(options.toDate) : undefined,
@@ -515,6 +624,7 @@ export async function getStockLedger(options: {
 
 /**
  * Get inventory valuation summary
+ * Returns total value of inventory grouped by item
  */
 export async function getInventoryValuation(): Promise<ActionResult> {
   try {
@@ -523,7 +633,81 @@ export async function getInventoryValuation(): Promise<ActionResult> {
       return { success: false, error: 'Organization not found' };
     }
 
-    const valuation = await StockLedgerService.getInventoryValuation(orgId);
+    const supabase = await createClient();
+
+    // Get the latest stock ledger entry for each item/warehouse combination
+    const { data, error } = await supabase
+      .from('stock_ledger_entries')
+      .select(`
+        item_id,
+        items!inner(item_name, item_code),
+        warehouse_id,
+        warehouses!inner(warehouse_name),
+        qty_after_transaction,
+        valuation_rate,
+        stock_value
+      `)
+      .eq('is_cancelled', false)
+      .order('posting_datetime', { ascending: false });
+
+    if (error) {
+      throw new Error(`Failed to get inventory valuation: ${error.message}`);
+    }
+
+    // Group by item and calculate totals
+    const itemMap = new Map<string, {
+      itemId: string;
+      itemName: string;
+      itemCode: string;
+      totalQty: number;
+      totalValue: number;
+      warehouses: Array<{
+        warehouseId: string;
+        warehouseName: string;
+        qty: number;
+        value: number;
+      }>;
+    }>();
+
+    const seenCombos = new Set<string>();
+    for (const row of data || []) {
+      const comboKey = `${row.item_id}-${row.warehouse_id}`;
+      if (seenCombos.has(comboKey)) continue; // Skip older entries for same item/warehouse
+      seenCombos.add(comboKey);
+
+      const itemData = row.items as unknown as { item_name: string; item_code: string };
+      const warehouseData = row.warehouses as unknown as { warehouse_name: string };
+      const qty = parseFloat(String(row.qty_after_transaction)) || 0;
+      const value = parseFloat(String(row.stock_value)) || 0;
+
+      if (!itemMap.has(row.item_id)) {
+        itemMap.set(row.item_id, {
+          itemId: row.item_id,
+          itemName: itemData.item_name,
+          itemCode: itemData.item_code,
+          totalQty: 0,
+          totalValue: 0,
+          warehouses: [],
+        });
+      }
+
+      const item = itemMap.get(row.item_id)!;
+      item.totalQty += qty;
+      item.totalValue += value;
+      item.warehouses.push({
+        warehouseId: row.warehouse_id,
+        warehouseName: warehouseData.warehouse_name,
+        qty,
+        value,
+      });
+    }
+
+    const valuation = {
+      items: Array.from(itemMap.values()),
+      totalValue: Array.from(itemMap.values()).reduce((sum, item) => sum + item.totalValue, 0),
+      totalItems: itemMap.size,
+    };
+
     return { success: true, data: valuation };
   } catch (error) {
     console.error('[getInventoryValuation] Error:', error);

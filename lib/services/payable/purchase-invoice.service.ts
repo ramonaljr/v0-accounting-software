@@ -390,9 +390,11 @@ export class PurchaseInvoiceService {
     const glEntries: GLEntryInput[] = [];
 
     // Credit: Accounts Payable (net of withholding)
+    const creditAmount = invoice.applyWithholdingTax ? invoice.netTotal : invoice.grandTotal;
     glEntries.push({
       orgId: invoice.orgId,
       accountId: payableAccount,
+      accountCurrency: invoice.currency,
       postingDate: invoice.postingDate,
       voucherType: 'Purchase Invoice',
       voucherId: invoice.id,
@@ -400,12 +402,15 @@ export class PurchaseInvoiceService {
       partyType: 'Supplier',
       partyId: invoice.supplierId,
       debit: 0,
-      credit: invoice.applyWithholdingTax ? invoice.netTotal : invoice.grandTotal,
-      currency: invoice.currency,
+      debitInAccountCurrency: 0,
+      credit: creditAmount * invoice.exchangeRate,
+      creditInAccountCurrency: creditAmount,
       exchangeRate: invoice.exchangeRate,
       remarks: `Purchase from ${invoice.supplierName}`,
       costCenterId: invoice.costCenterId,
       projectId: invoice.projectId,
+      isOpening: false,
+      isAdvance: false,
     });
 
     // Debit: Expense accounts (per item or summary)
@@ -420,17 +425,21 @@ export class PurchaseInvoiceService {
       glEntries.push({
         orgId: invoice.orgId,
         accountId: accId,
+        accountCurrency: invoice.currency,
         postingDate: invoice.postingDate,
         voucherType: 'Purchase Invoice',
         voucherId: invoice.id,
         voucherNo: invoice.invoiceNumber,
-        debit: amount,
+        debit: amount * invoice.exchangeRate,
+        debitInAccountCurrency: amount,
         credit: 0,
-        currency: invoice.currency,
+        creditInAccountCurrency: 0,
         exchangeRate: invoice.exchangeRate,
         remarks: `Purchase from ${invoice.supplierName}`,
         costCenterId: invoice.costCenterId,
         projectId: invoice.projectId,
+        isOpening: false,
+        isAdvance: false,
       });
     }
 
@@ -439,16 +448,20 @@ export class PurchaseInvoiceService {
       glEntries.push({
         orgId: invoice.orgId,
         accountId: inputVatAccount,
+        accountCurrency: invoice.currency,
         postingDate: invoice.postingDate,
         voucherType: 'Purchase Invoice',
         voucherId: invoice.id,
         voucherNo: invoice.invoiceNumber,
-        debit: invoice.totalTaxes,
+        debit: invoice.totalTaxes * invoice.exchangeRate,
+        debitInAccountCurrency: invoice.totalTaxes,
         credit: 0,
-        currency: invoice.currency,
+        creditInAccountCurrency: 0,
         exchangeRate: invoice.exchangeRate,
         remarks: `Input VAT - ${invoice.invoiceNumber}`,
         costCenterId: invoice.costCenterId,
+        isOpening: false,
+        isAdvance: false,
       });
     }
 
@@ -457,6 +470,7 @@ export class PurchaseInvoiceService {
       glEntries.push({
         orgId: invoice.orgId,
         accountId: whtPayableAccount,
+        accountCurrency: invoice.currency,
         postingDate: invoice.postingDate,
         voucherType: 'Purchase Invoice',
         voucherId: invoice.id,
@@ -464,19 +478,19 @@ export class PurchaseInvoiceService {
         partyType: 'Supplier',
         partyId: invoice.supplierId,
         debit: 0,
-        credit: invoice.withholdingTaxAmount,
-        currency: invoice.currency,
+        debitInAccountCurrency: 0,
+        credit: invoice.withholdingTaxAmount * invoice.exchangeRate,
+        creditInAccountCurrency: invoice.withholdingTaxAmount,
         exchangeRate: invoice.exchangeRate,
         remarks: `WHT to remit - ${invoice.withholdingTaxType || 'EWT'}`,
         costCenterId: invoice.costCenterId,
+        isOpening: false,
+        isAdvance: false,
       });
     }
 
     // Post GL entries
-    await LedgerService.makeGLEntries(glEntries, {
-      validateBalance: true,
-      postingDate: invoice.postingDate,
-    });
+    await LedgerService.makeGLEntries(glEntries);
 
     // Create payment ledger entry (outstanding)
     await supabase.from('payment_ledger_entries').insert({

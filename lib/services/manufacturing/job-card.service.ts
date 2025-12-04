@@ -311,7 +311,7 @@ export class JobCardService {
       throw new ManufacturingError(`Failed to list job cards: ${error.message}`);
     }
 
-    return (data || []).map(jc => ({
+    return (data || []).map((jc: any) => ({
       id: jc.id,
       jobCardNo: jc.job_card_no,
       status: jc.status,
@@ -541,16 +541,17 @@ export class JobCardService {
     // Create stock entry for material transfer
     await StockEntryService.create({
       orgId: jc.orgId,
-      stockEntryType: 'Material Transfer for Manufacture',
+      purpose: 'Material Transfer for Manufacture',
       postingDate: input.postingDate,
       postingTime: input.postingTime,
       workOrderId: jc.workOrderId,
-      jobCardId: jc.id,
       items: input.items.map(i => ({
         itemId: i.itemId,
         qty: i.qty,
-        sourceWarehouseId: i.sourceWarehouseId,
-        targetWarehouseId: jc.wipWarehouseId,
+        sWarehouseId: i.sourceWarehouseId,
+        tWarehouseId: jc.wipWarehouseId,
+        isFinishedItem: false,
+        isScrapItem: false,
       })),
     });
 
@@ -701,7 +702,7 @@ export class JobCardService {
       throw new ManufacturingError(`Failed to get timeline: ${error.message}`);
     }
 
-    return (data || []).map(jc => ({
+    return (data || []).map((jc: any) => ({
       jobCardId: jc.id,
       jobCardNo: jc.job_card_no,
       workOrderNo: jc.work_orders?.work_order_no || '',
@@ -769,7 +770,7 @@ export class JobCardService {
     return {
       employeeId,
       employeeName: employee?.employee_name || '',
-      jobCards: (jcs || []).map(jc => ({
+      jobCards: (jcs || []).map((jc: any) => ({
         jobCardNo: jc.job_card_no,
         operationName: jc.operations?.operation_name || '',
         itemName: jc.items?.item_name || '',

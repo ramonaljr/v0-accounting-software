@@ -25,27 +25,6 @@ export interface UserOrgContext {
  * @returns User organization context or null if not found
  */
 export async function getCurrentOrg(): Promise<UserOrgContext | null> {
-  // TEMPORARY: Always return mock context until auth is properly configured
-  const bypassAuth = true; // Hardcoded for now to get dashboard working
-
-  if (bypassAuth) {
-    // Use valid UUID format for development to avoid database type errors
-    const devOrgId = '00000000-0000-0000-0000-000000000001';
-    const devUserId = '00000000-0000-0000-0000-000000000002';
-
-    return {
-      userId: devUserId,
-      orgId: devOrgId,
-      role: 'owner',
-      org: {
-        id: devOrgId,
-        name: 'Development Company',
-        slug: 'dev-company',
-        settings: {},
-      },
-    }
-  }
-
   const supabase = await createClient()
 
   // Get current user

@@ -9,7 +9,7 @@ function mockEnvModule({ hasERPNext, baseUrl = "https://example.com", key = "k",
       ERPNEXT_API_KEY: key,
       ERPNEXT_API_SECRET: secret,
     },
-  }), { virtual: true });
+  }));
 }
 
 describe("ERPNext client", () => {
@@ -17,7 +17,6 @@ describe("ERPNext client", () => {
     vi.resetModules();
     vi.restoreAllMocks();
     // default mock fetch
-    // @ts-expect-error allow assignment
     global.fetch = vi.fn(async () => new Response(JSON.stringify({ ok: true }), { headers: { "content-type": "application/json" } })) as any;
   });
 

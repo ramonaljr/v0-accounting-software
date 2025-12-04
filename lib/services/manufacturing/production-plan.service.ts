@@ -368,19 +368,19 @@ export class ProductionPlanService {
       if (!bom) continue;
 
       results.push({
-        salesOrderId: row.sales_orders.id,
-        salesOrderNo: row.sales_orders.sales_order_no,
+        salesOrderId: (row.sales_orders as any).id,
+        salesOrderNo: (row.sales_orders as any).sales_order_no,
         salesOrderItemId: row.id,
         itemId: row.item_id,
-        itemCode: row.items.item_code,
-        itemName: row.items.item_name,
+        itemCode: (row.items as any).item_code,
+        itemName: (row.items as any).item_name,
         bomId: bom.id,
         bomNo: bom.bomNo,
         quantity: qty,
         deliveredQty,
         pendingQty,
-        deliveryDate: row.sales_orders.delivery_date
-          ? new Date(row.sales_orders.delivery_date)
+        deliveryDate: (row.sales_orders as any).delivery_date
+          ? new Date((row.sales_orders as any).delivery_date)
           : undefined,
       });
     }
@@ -684,6 +684,9 @@ export class ProductionPlanService {
         sourceWarehouseId: planItem.warehouseId,
         wipWarehouseId: itemInput.wipWarehouseId,
         targetWarehouseId: itemInput.targetWarehouseId || planItem.warehouseId,
+        skipTransfer: false,
+        useMultiLevelBom: true,
+        allowAlternativeItem: false,
       });
 
       workOrderIds.push(wo.id);
@@ -708,6 +711,9 @@ export class ProductionPlanService {
         quantity: subAssembly.qty - subAssembly.woProducedQty,
         productionPlanId: pp.id,
         sourceWarehouseId: subAssembly.warehouseId,
+        skipTransfer: false,
+        useMultiLevelBom: true,
+        allowAlternativeItem: false,
       });
 
       workOrderIds.push(wo.id);

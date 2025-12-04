@@ -329,7 +329,7 @@ export async function pullFromERPNext(
     })
 
     // Fetch from ERPNext
-    const response = await erpnextFetch(
+    const response = await erpnextFetch<Record<string, unknown>>(
       `/api/resource/${options.erpDoctype}/${mapping.erpName}`
     )
 

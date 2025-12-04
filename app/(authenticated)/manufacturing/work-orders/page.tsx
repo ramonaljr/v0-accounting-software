@@ -122,7 +122,7 @@ export default function WorkOrdersPage() {
     startTransition(async () => {
       const data = {
         bomId: formData.get('bomId') as string,
-        qty: parseFloat(formData.get('qty') as string),
+        quantity: parseFloat(formData.get('qty') as string),
         plannedStartDate: formData.get('plannedStartDate') as string,
         targetWarehouseId: formData.get('targetWarehouseId') as string,
         sourceWarehouseId: formData.get('sourceWarehouseId') as string || undefined,

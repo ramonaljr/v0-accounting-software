@@ -332,7 +332,7 @@ export class StockEntryService {
           postingTime: entry.postingTime,
           actualQty: -item.qty,
           outgoingRate: item.valuationRate,
-          voucherType: 'Stock Entry',
+          voucherType: 'Stock Entry' as const,
           voucherId: entry.id,
           voucherNo: entry.entryNumber,
           voucherDetailId: item.id,
@@ -352,7 +352,7 @@ export class StockEntryService {
           postingTime: entry.postingTime,
           actualQty: item.qty,
           incomingRate: item.basicRate,
-          voucherType: 'Stock Entry',
+          voucherType: 'Stock Entry' as const,
           voucherId: entry.id,
           voucherNo: entry.entryNumber,
           voucherDetailId: item.id,
@@ -479,13 +479,19 @@ export class StockEntryService {
         glEntries.push({
           orgId: entry.orgId,
           accountId: inventoryAccount,
+          accountCurrency: 'PHP',
           postingDate: entry.postingDate,
-          voucherType: 'Stock Entry',
+          voucherType: 'Stock Entry' as const,
           voucherId: entry.id,
           voucherNo: entry.entryNumber,
+          debitInAccountCurrency: entry.totalIncomingValue,
+          creditInAccountCurrency: 0,
           debit: entry.totalIncomingValue,
           credit: 0,
+          exchangeRate: 1,
           remarks: `Stock Receipt - ${entry.entryNumber}`,
+          isOpening: false,
+          isAdvance: false,
         });
         // Credit would depend on source (opening stock, purchase, etc.)
         break;
@@ -495,24 +501,36 @@ export class StockEntryService {
         glEntries.push({
           orgId: entry.orgId,
           accountId: expenseAccount,
+          accountCurrency: 'PHP',
           postingDate: entry.postingDate,
-          voucherType: 'Stock Entry',
+          voucherType: 'Stock Entry' as const,
           voucherId: entry.id,
           voucherNo: entry.entryNumber,
+          debitInAccountCurrency: entry.totalOutgoingValue,
+          creditInAccountCurrency: 0,
           debit: entry.totalOutgoingValue,
           credit: 0,
+          exchangeRate: 1,
           remarks: `Stock Issue - ${entry.entryNumber}`,
+          isOpening: false,
+          isAdvance: false,
         });
         glEntries.push({
           orgId: entry.orgId,
           accountId: inventoryAccount,
+          accountCurrency: 'PHP',
           postingDate: entry.postingDate,
-          voucherType: 'Stock Entry',
+          voucherType: 'Stock Entry' as const,
           voucherId: entry.id,
           voucherNo: entry.entryNumber,
+          debitInAccountCurrency: 0,
+          creditInAccountCurrency: entry.totalOutgoingValue,
           debit: 0,
           credit: entry.totalOutgoingValue,
+          exchangeRate: 1,
           remarks: `Stock Issue - ${entry.entryNumber}`,
+          isOpening: false,
+          isAdvance: false,
         });
         break;
 
@@ -532,10 +550,7 @@ export class StockEntryService {
 
     if (glEntries.length > 0) {
       try {
-        await LedgerService.makeGLEntries(glEntries, {
-          validateBalance: true,
-          postingDate: entry.postingDate,
-        });
+        await LedgerService.makeGLEntries(glEntries);
       } catch (error) {
         console.error('Failed to create GL entries for stock entry:', error);
         // Don't fail the stock entry if GL posting fails
@@ -572,6 +587,8 @@ export class StockEntryService {
         basicRate: item.rate,
         batchId: item.batchId,
         serialNo: item.serialNo,
+        isFinishedItem: false,
+        isScrapItem: false,
       })),
     });
   }
@@ -602,6 +619,8 @@ export class StockEntryService {
         qty: item.qty,
         batchId: item.batchId,
         serialNo: item.serialNo,
+        isFinishedItem: false,
+        isScrapItem: false,
       })),
     });
   }
@@ -635,6 +654,8 @@ export class StockEntryService {
         qty: item.qty,
         batchId: item.batchId,
         serialNo: item.serialNo,
+        isFinishedItem: false,
+        isScrapItem: false,
       })),
     });
   }

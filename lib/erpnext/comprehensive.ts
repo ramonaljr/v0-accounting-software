@@ -43,7 +43,7 @@ export async function importFromERPNext(params: {
     const filtersParam = params.filters ? `&filters=${JSON.stringify(params.filters)}` : ''
     const limitParam = params.limit ? `&limit_page_length=${params.limit}` : '&limit_page_length=999'
 
-    const response = await erpnextFetch(
+    const response = await erpnextFetch<{ data?: unknown[] }>(
       `/api/resource/${params.doctype}?fields=${fieldsParam}${filtersParam}${limitParam}`
     )
 
@@ -106,7 +106,7 @@ export async function getDocument(params: {
   name: string
 }): Promise<unknown> {
   try {
-    const response = await erpnextFetch(`/api/resource/${params.doctype}/${params.name}`)
+    const response = await erpnextFetch<{ data?: unknown }>(`/api/resource/${params.doctype}/${params.name}`)
     return response.data || response
   } catch (error) {
     console.error(`Failed to get ${params.doctype}:`, error)
@@ -197,7 +197,7 @@ export async function pushAssetToERPNext(orgId: string, assetId: string, payload
  */
 export async function pushExchangeRateToERPNext(payload: Record<string, unknown>) {
   try {
-    const response = await erpnextFetch('/api/resource/Currency Exchange', {
+    const response = await erpnextFetch<{ data?: { name?: string }; name?: string }>('/api/resource/Currency Exchange', {
       method: 'POST',
       body: JSON.stringify(payload),
     })

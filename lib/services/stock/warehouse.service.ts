@@ -10,8 +10,8 @@ import type {
   UpdateWarehouse,
   WarehouseListFilters,
   WarehouseWithChildren,
-  WarehouseStockSummary,
 } from '@/lib/models/stock/warehouse';
+import type { WarehouseStockSummary } from '@/lib/models/stock/bin';
 import { StockLedgerError } from './stock-ledger.service';
 
 export class WarehouseService {
@@ -360,7 +360,7 @@ export class WarehouseService {
 
     const { data: bins } = await supabase
       .from('bins')
-      .select('item_id, actual_qty, stock_value')
+      .select('item_id, actual_qty, stock_value, valuation_rate, items(item_code, item_name)')
       .eq('warehouse_id', id)
       .gt('actual_qty', 0);
 
@@ -370,11 +370,24 @@ export class WarehouseService {
       0
     );
 
+    const itemBreakdown = (bins || []).map((b: Record<string, unknown>) => {
+      const item = b.items as Record<string, unknown> | null;
+      return {
+        itemId: b.item_id as string,
+        itemCode: (item?.item_code as string) || '',
+        itemName: (item?.item_name as string) || '',
+        qty: parseFloat(b.actual_qty as string) || 0,
+        valuationRate: parseFloat(b.valuation_rate as string) || 0,
+        value: parseFloat(b.stock_value as string) || 0,
+      };
+    });
+
     return {
       warehouseId: warehouse.id,
       warehouseName: warehouse.warehouseName,
       totalItems,
       totalValue,
+      itemBreakdown,
     };
   }
 

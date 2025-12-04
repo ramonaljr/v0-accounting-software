@@ -18,8 +18,8 @@ import {
 } from '@/lib/models/receivable/sales-invoice';
 import { LedgerService, AccountingError } from '../accounting/ledger.service';
 import type { GLEntryInput } from '@/lib/models/accounting/gl-entry';
+import { GLVoucherType } from '@/lib/models/accounting/gl-entry';
 import { CustomerService } from './customer.service';
-import { calculateDueDate } from '@/lib/models/receivable/customer';
 
 export class SalesInvoiceService {
   /**
@@ -32,10 +32,11 @@ export class SalesInvoiceService {
     const customer = await CustomerService.getById(input.customerId);
 
     // Calculate due date if not provided
-    const dueDate = input.dueDate || calculateDueDate(
-      input.postingDate,
-      customer.paymentTerms || 'Due on Receipt'
-    );
+    const dueDate = input.dueDate || (() => {
+      const date = new Date(input.postingDate);
+      date.setDate(date.getDate() + (customer.paymentTerms || 30));
+      return date;
+    })();
 
     // Calculate item amounts
     const calculatedItems = input.items.map((item, idx) => {
@@ -61,7 +62,7 @@ export class SalesInvoiceService {
     let withholdingTaxAmount = 0;
     let netTotal = totals.grandTotal;
 
-    if (input.applyWithholdingTax && customer.isSubjectToWht) {
+    if (input.applyWithholdingTax) {
       // Default withholding rate for services in PH is 2%
       const whtRate = 2;
       withholdingTaxAmount = totals.baseTotal * (whtRate / 100);
@@ -77,7 +78,7 @@ export class SalesInvoiceService {
         customer_id: input.customerId,
         customer_name: customer.customerName,
         customer_address: customer.billingAddress
-          ? `${customer.billingAddress.addressLine1}, ${customer.billingAddress.city}`
+          ? `${customer.billingAddress.line1 || ''}, ${customer.billingAddress.city || ''}`
           : null,
         posting_date: input.postingDate.toISOString().split('T')[0],
         due_date: dueDate.toISOString().split('T')[0],
@@ -97,9 +98,9 @@ export class SalesInvoiceService {
         withholding_tax_amount: withholdingTaxAmount,
         net_total: netTotal,
         status: 'Draft',
-        debit_to_account_id: input.debitToAccountId || customer.defaultReceivableAccount,
-        income_account_id: input.incomeAccountId || customer.defaultIncomeAccount,
-        cost_center_id: input.costCenterId || customer.defaultCostCenter,
+        debit_to_account_id: input.debitToAccountId || customer.defaultReceivableAccountId,
+        income_account_id: input.incomeAccountId,
+        cost_center_id: input.costCenterId,
         project_id: input.projectId,
         sales_order_id: input.salesOrderId,
         delivery_note_id: input.deliveryNoteId,
@@ -402,19 +403,23 @@ export class SalesInvoiceService {
     glEntries.push({
       orgId: invoice.orgId,
       accountId: receivableAccount,
+      accountCurrency: invoice.currency,
       postingDate: invoice.postingDate,
       voucherType: 'Sales Invoice',
       voucherId: invoice.id,
       voucherNo: invoice.invoiceNumber,
       partyType: 'Customer',
       partyId: invoice.customerId,
-      debit: invoice.grandTotal,
+      debitInAccountCurrency: invoice.grandTotal,
+      creditInAccountCurrency: 0,
+      debit: invoice.grandTotal * invoice.exchangeRate,
       credit: 0,
-      currency: invoice.currency,
       exchangeRate: invoice.exchangeRate,
       remarks: `Sales to ${invoice.customerName}`,
       costCenterId: invoice.costCenterId,
       projectId: invoice.projectId,
+      isOpening: false,
+      isAdvance: false,
     });
 
     // Credit: Income accounts (per item or summary)
@@ -429,17 +434,21 @@ export class SalesInvoiceService {
       glEntries.push({
         orgId: invoice.orgId,
         accountId: accId,
+        accountCurrency: invoice.currency,
         postingDate: invoice.postingDate,
-        voucherType: 'Sales Invoice',
+        voucherType: 'Sales Invoice' as const,
         voucherId: invoice.id,
         voucherNo: invoice.invoiceNumber,
+        debitInAccountCurrency: 0,
+        creditInAccountCurrency: amount,
         debit: 0,
-        credit: amount,
-        currency: invoice.currency,
+        credit: amount * invoice.exchangeRate,
         exchangeRate: invoice.exchangeRate,
         remarks: `Sales to ${invoice.customerName}`,
         costCenterId: invoice.costCenterId,
         projectId: invoice.projectId,
+        isOpening: false,
+        isAdvance: false,
       });
     }
 
@@ -448,48 +457,54 @@ export class SalesInvoiceService {
       glEntries.push({
         orgId: invoice.orgId,
         accountId: outputVatAccount,
+        accountCurrency: invoice.currency,
         postingDate: invoice.postingDate,
-        voucherType: 'Sales Invoice',
+        voucherType: 'Sales Invoice' as const,
         voucherId: invoice.id,
         voucherNo: invoice.invoiceNumber,
+        debitInAccountCurrency: 0,
+        creditInAccountCurrency: invoice.totalTaxes,
         debit: 0,
-        credit: invoice.totalTaxes,
-        currency: invoice.currency,
+        credit: invoice.totalTaxes * invoice.exchangeRate,
         exchangeRate: invoice.exchangeRate,
         remarks: `Output VAT - ${invoice.invoiceNumber}`,
         costCenterId: invoice.costCenterId,
+        isOpening: false,
+        isAdvance: false,
       });
     }
 
     // Debit: Withholding Tax (reduces receivable)
     if (invoice.withholdingTaxAmount > 0 && whtAccount) {
       // Reduce AR by withholding amount
-      glEntries[0].debit = invoice.netTotal;  // Adjust AR to net
+      glEntries[0].debit = invoice.netTotal * invoice.exchangeRate;  // Adjust AR to net
+      glEntries[0].debitInAccountCurrency = invoice.netTotal;
 
       // Debit WHT asset
       glEntries.push({
         orgId: invoice.orgId,
         accountId: whtAccount,
+        accountCurrency: invoice.currency,
         postingDate: invoice.postingDate,
-        voucherType: 'Sales Invoice',
+        voucherType: 'Sales Invoice' as const,
         voucherId: invoice.id,
         voucherNo: invoice.invoiceNumber,
         partyType: 'Customer',
         partyId: invoice.customerId,
-        debit: invoice.withholdingTaxAmount,
+        debitInAccountCurrency: invoice.withholdingTaxAmount,
+        creditInAccountCurrency: 0,
+        debit: invoice.withholdingTaxAmount * invoice.exchangeRate,
         credit: 0,
-        currency: invoice.currency,
         exchangeRate: invoice.exchangeRate,
         remarks: `WHT deducted by ${invoice.customerName}`,
         costCenterId: invoice.costCenterId,
+        isOpening: false,
+        isAdvance: false,
       });
     }
 
     // Post GL entries
-    await LedgerService.makeGLEntries(glEntries, {
-      validateBalance: true,
-      postingDate: invoice.postingDate,
-    });
+    await LedgerService.makeGLEntries(glEntries);
 
     // Create payment ledger entry (outstanding)
     await supabase.from('payment_ledger_entries').insert({

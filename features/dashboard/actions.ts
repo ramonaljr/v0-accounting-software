@@ -14,6 +14,22 @@ import type { Database } from "@/lib/supabase/database.types";
 // Type alias for Supabase client
 type TypedSupabaseClient = SupabaseClient<Database>;
 
+// Database row types for query results
+interface ARAgingRow {
+  total_outstanding?: string | number | null;
+  current?: string | number | null;
+  days_1_30?: string | number | null;
+  days_31_60?: string | number | null;
+  days_61_90?: string | number | null;
+  days_90_plus?: string | number | null;
+}
+
+interface InvoiceRow {
+  status: string | null;
+  total: string | number | null;
+  amount_due: string | number | null;
+}
+
 // =====================================================
 // GET DASHBOARD METRICS WITH FILTERS
 // =====================================================
@@ -197,13 +213,14 @@ async function fetchARMetrics(supabase: TypedSupabaseClient, orgId: string) {
     };
   }
 
-  const total = data.reduce((sum: number, row: any) => sum + parseFloat(row.total_outstanding || 0), 0);
+  const rows = data as ARAgingRow[];
+  const total = rows.reduce((sum, row) => sum + parseFloat(String(row.total_outstanding || 0)), 0);
   const aging = {
-    current: data.reduce((sum: number, row: any) => sum + parseFloat(row.current || 0), 0),
-    days_1_30: data.reduce((sum: number, row: any) => sum + parseFloat(row.days_1_30 || 0), 0),
-    days_31_60: data.reduce((sum: number, row: any) => sum + parseFloat(row.days_31_60 || 0), 0),
-    days_61_90: data.reduce((sum: number, row: any) => sum + parseFloat(row.days_61_90 || 0), 0),
-    days_90_plus: data.reduce((sum: number, row: any) => sum + parseFloat(row.days_90_plus || 0), 0),
+    current: rows.reduce((sum, row) => sum + parseFloat(String(row.current || 0)), 0),
+    days_1_30: rows.reduce((sum, row) => sum + parseFloat(String(row.days_1_30 || 0)), 0),
+    days_31_60: rows.reduce((sum, row) => sum + parseFloat(String(row.days_31_60 || 0)), 0),
+    days_61_90: rows.reduce((sum, row) => sum + parseFloat(String(row.days_61_90 || 0)), 0),
+    days_90_plus: rows.reduce((sum, row) => sum + parseFloat(String(row.days_90_plus || 0)), 0),
   };
   const overdue = aging.days_1_30 + aging.days_31_60 + aging.days_61_90 + aging.days_90_plus;
 
@@ -254,19 +271,20 @@ async function fetchInvoiceMetrics(supabase: TypedSupabaseClient, orgId: string)
     };
   }
 
-  const draft = data.filter((inv: any) => inv.status === "draft");
-  const sent = data.filter((inv: any) => inv.status === "sent");
-  const overdue = data.filter((inv: any) => inv.status === "overdue");
-  const paid = data.filter((inv: any) => inv.status === "paid");
+  const invoices = data as InvoiceRow[];
+  const draft = invoices.filter((inv) => inv.status === "draft");
+  const sent = invoices.filter((inv) => inv.status === "sent");
+  const overdueInv = invoices.filter((inv) => inv.status === "overdue");
+  const paid = invoices.filter((inv) => inv.status === "paid");
 
   return {
     draft: draft.length,
     sent: sent.length,
-    overdue: overdue.length,
+    overdue: overdueInv.length,
     paid: paid.length,
-    totalDraft: draft.reduce((sum: number, inv: any) => sum + parseFloat(inv.total || 0), 0),
-    totalSent: sent.reduce((sum: number, inv: any) => sum + parseFloat(inv.amount_due || 0), 0),
-    totalOverdue: overdue.reduce((sum: number, inv: any) => sum + parseFloat(inv.amount_due || 0), 0),
+    totalDraft: draft.reduce((sum, inv) => sum + parseFloat(String(inv.total || 0)), 0),
+    totalSent: sent.reduce((sum, inv) => sum + parseFloat(String(inv.amount_due || 0)), 0),
+    totalOverdue: overdueInv.reduce((sum, inv) => sum + parseFloat(String(inv.amount_due || 0)), 0),
   };
 }
 
@@ -282,7 +300,7 @@ async function fetchBillMetrics(supabase: TypedSupabaseClient, orgId: string) {
   };
 }
 
-async function fetchBankAccountMetrics(supabase: any, orgId: string) {
+async function fetchBankAccountMetrics(supabase: TypedSupabaseClient, orgId: string) {
   // TODO: Query bank_accounts table when available
   return [
     {
@@ -318,7 +336,7 @@ async function fetchBankAccountMetrics(supabase: any, orgId: string) {
   ];
 }
 
-async function fetchTaxMetrics(supabase: any, orgId: string) {
+async function fetchTaxMetrics(supabase: TypedSupabaseClient, orgId: string) {
   // TODO: Query tax liabilities and jurisdictions
   return {
     salesTax: {
@@ -339,7 +357,7 @@ async function fetchTaxMetrics(supabase: any, orgId: string) {
   };
 }
 
-async function fetchBalanceSheetMetrics(supabase: any, orgId: string, asOfDate: string) {
+async function fetchBalanceSheetMetrics(supabase: TypedSupabaseClient, orgId: string, asOfDate: string) {
   // TODO: Use generate_balance_sheet function
   return {
     assets: 250000,

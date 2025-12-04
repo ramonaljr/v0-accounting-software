@@ -102,7 +102,7 @@ export async function pushCustomerToERPNext(params: {
       erpDoctype: 'Customer',
       direction: 'push',
     },
-    erpCustomer
+    erpCustomer as unknown as Record<string, unknown>
   )
 }
 
@@ -197,6 +197,6 @@ export async function pushSalesInvoiceToERPNext(params: {
       erpDoctype: 'Sales Invoice',
       direction: 'push',
     },
-    erpInvoice
+    erpInvoice as unknown as Record<string, unknown>
   )
 }

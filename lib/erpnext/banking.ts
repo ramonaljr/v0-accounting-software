@@ -121,7 +121,7 @@ export async function pushBankAccountToERPNext(params: {
       erpDoctype: 'Bank Account',
       direction: 'push',
     },
-    erpBankAccount
+    erpBankAccount as unknown as Record<string, unknown>
   )
 
   return result
@@ -181,7 +181,7 @@ export async function pushBankTransactionToERPNext(params: {
       erpDoctype: 'Bank Transaction',
       direction: 'push',
     },
-    erpTransaction
+    erpTransaction as unknown as Record<string, unknown>
   )
 
   return result
@@ -236,7 +236,7 @@ export async function createPaymentEntry(params: {
       })),
     }
 
-    const response = await erpnextFetch('/api/resource/Payment Entry', {
+    const response = await erpnextFetch<{ data?: { name?: string }; name?: string }>('/api/resource/Payment Entry', {
       method: 'POST',
       body: JSON.stringify(paymentEntry),
     })
@@ -260,7 +260,7 @@ export async function createPaymentEntry(params: {
  */
 export async function getERPNextBankAccounts(companyName: string): Promise<ERPNextBankAccount[]> {
   try {
-    const response = await erpnextFetch(
+    const response = await erpnextFetch<{ data?: ERPNextBankAccount[] }>(
       `/api/resource/Bank Account?fields=["name","account_name","bank","account","company","is_company_account","is_default"]&filters=[["company","=","${companyName}"]]&limit_page_length=999`
     )
 

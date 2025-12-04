@@ -12,7 +12,14 @@
       "Bash(head:*)",
       "Bash(find:*)",
       "Bash(ls:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(npx tsc:*)",
+      "Bash(tasklist:*)",
+      "Bash(dir:*)",
+      "Bash(git checkout:*)",
+      "Bash(wc:*)",
+      "Bash(grep:*)",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []

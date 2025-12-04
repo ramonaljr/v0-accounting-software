@@ -346,7 +346,7 @@ export class WorkOrderService {
       throw new ManufacturingError(`Failed to list work orders: ${error.message}`);
     }
 
-    return (data || []).map(wo => ({
+    return (data || []).map((wo: any) => ({
       id: wo.id,
       workOrderNo: wo.work_order_no,
       status: wo.status,
@@ -414,15 +414,17 @@ export class WorkOrderService {
 
     await StockEntryService.create({
       orgId: wo.orgId,
-      stockEntryType: 'Material Transfer for Manufacture',
+      purpose: 'Material Transfer for Manufacture',
       postingDate: input.postingDate,
       postingTime: input.postingTime,
       workOrderId: wo.id,
       items: transferItems.map(t => ({
         itemId: t.itemId,
         qty: t.qty,
-        sourceWarehouseId: t.sourceWarehouseId,
-        targetWarehouseId: t.targetWarehouseId,
+        sWarehouseId: t.sourceWarehouseId,
+        tWarehouseId: t.targetWarehouseId,
+        isFinishedItem: false,
+        isScrapItem: false,
       })),
     });
 
@@ -472,8 +474,10 @@ export class WorkOrderService {
         manufactureItems.push({
           itemId: consumed.itemId,
           qty: consumed.qty,
-          sourceWarehouseId: consumed.warehouseId,
+          sWarehouseId: consumed.warehouseId,
           basicRate: consumed.rate,
+          isFinishedItem: false,
+          isScrapItem: false,
         });
       }
     } else {
@@ -486,7 +490,9 @@ export class WorkOrderService {
         manufactureItems.push({
           itemId: item.itemId,
           qty: consumeQty,
-          sourceWarehouseId: wo.wipWarehouseId || wo.sourceWarehouseId,
+          sWarehouseId: wo.wipWarehouseId || wo.sourceWarehouseId,
+          isFinishedItem: false,
+          isScrapItem: false,
         });
       }
     }
@@ -495,8 +501,9 @@ export class WorkOrderService {
     manufactureItems.push({
       itemId: wo.itemId,
       qty: input.quantity,
-      targetWarehouseId: input.targetWarehouseId || wo.targetWarehouseId,
+      tWarehouseId: input.targetWarehouseId || wo.targetWarehouseId,
       isFinishedItem: true,
+      isScrapItem: false,
     });
 
     // Add scrap items if any
@@ -505,7 +512,8 @@ export class WorkOrderService {
         manufactureItems.push({
           itemId: scrap.itemId,
           qty: scrap.qty,
-          targetWarehouseId: scrap.warehouseId || wo.scrapWarehouseId,
+          tWarehouseId: scrap.warehouseId || wo.scrapWarehouseId,
+          isFinishedItem: false,
           isScrapItem: true,
         });
       }
@@ -513,7 +521,7 @@ export class WorkOrderService {
 
     await StockEntryService.create({
       orgId: wo.orgId,
-      stockEntryType: 'Manufacture',
+      purpose: 'Manufacture',
       postingDate: input.postingDate,
       postingTime: input.postingTime,
       workOrderId: wo.id,

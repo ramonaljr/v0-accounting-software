@@ -93,6 +93,9 @@ export async function getBom(id: string): Promise<ActionResult> {
   }
 }
 
+// Default UOM ID for when none is provided (placeholder - should be fetched from DB in production)
+const DEFAULT_UOM_ID = '00000000-0000-0000-0000-000000000001';
+
 /**
  * Create BOM
  */
@@ -105,15 +108,24 @@ export async function createBom(data: {
   items: Array<{
     itemId: string;
     quantity: number;
-    rate?: number;
     uomId?: string;
+    rate?: number;
+    itemSequence?: number;
+    conversionFactor?: number;
+    sourcedByManufacturer?: boolean;
+    includeItemInManufacturing?: boolean;
+    allowAlternativeItem?: boolean;
   }>;
   operations?: Array<{
     operationId: string;
-    workstationId?: string;
-    timeInMinutes: number;
-    description?: string;
     sequence: number;
+    timeInMinutes: number;
+    batchSize?: number;
+    setUpTime?: number;
+    fixedTime?: boolean;
+    workstationId?: string;
+    description?: string;
+    hourRate?: number;
   }>;
 }): Promise<ActionResult> {
   try {
@@ -126,16 +138,37 @@ export async function createBom(data: {
       orgId,
       itemId: data.itemId,
       quantity: data.quantity || 1,
-      uomId: data.uomId,
+      uomId: data.uomId || DEFAULT_UOM_ID,
       description: data.description,
-      withOperations: data.withOperations,
-      items: data.items.map(item => ({
+      withOperations: data.withOperations ?? false,
+      rmCostAsPerValuationRate: true,
+      currency: 'PHP',
+      conversionRate: 1,
+      transferMaterialAgainstType: 'Work Order',
+      qualityInspectionRequired: false,
+      items: data.items.map((item, idx) => ({
         itemId: item.itemId,
         quantity: item.quantity,
+        uomId: item.uomId || DEFAULT_UOM_ID,
+        itemSequence: item.itemSequence ?? idx + 1,
+        conversionFactor: item.conversionFactor ?? 1,
         rate: item.rate,
-        uomId: item.uomId,
+        sourcedByManufacturer: item.sourcedByManufacturer ?? false,
+        includeItemInManufacturing: item.includeItemInManufacturing ?? true,
+        allowAlternativeItem: item.allowAlternativeItem ?? false,
       })),
-      operations: data.operations,
+      operations: (data.operations || []).map(op => ({
+        operationId: op.operationId,
+        sequence: op.sequence,
+        timeInMinutes: op.timeInMinutes,
+        batchSize: op.batchSize ?? 1,
+        setUpTime: op.setUpTime ?? 0,
+        fixedTime: op.fixedTime ?? false,
+        workstationId: op.workstationId,
+        description: op.description,
+        hourRate: op.hourRate,
+      })),
+      scrapItems: [],
     });
 
     revalidatePath('/manufacturing/bom');
@@ -293,12 +326,22 @@ export async function getWorkOrder(id: string): Promise<ActionResult> {
  */
 export async function createWorkOrder(data: {
   bomId: string;
-  qty: number;
-  plannedStartDate: string;
-  targetWarehouseId: string;
+  quantity: number;
+  plannedStartDate?: string;
+  expectedDeliveryDate?: string;
+  targetWarehouseId?: string;
   wipWarehouseId?: string;
   sourceWarehouseId?: string;
+  scrapWarehouseId?: string;
   salesOrderId?: string;
+  productionPlanId?: string;
+  skipTransfer?: boolean;
+  useMultiLevelBom?: boolean;
+  allowAlternativeItem?: boolean;
+  projectId?: string;
+  costCenterId?: string;
+  description?: string;
+  remarks?: string;
 }): Promise<ActionResult> {
   try {
     const orgId = await getCurrentOrg();
@@ -309,12 +352,22 @@ export async function createWorkOrder(data: {
     const workOrder = await WorkOrderService.create({
       orgId,
       bomId: data.bomId,
-      qty: data.qty,
-      plannedStartDate: new Date(data.plannedStartDate),
+      quantity: data.quantity,
+      plannedStartDate: data.plannedStartDate ? new Date(data.plannedStartDate) : undefined,
+      expectedDeliveryDate: data.expectedDeliveryDate ? new Date(data.expectedDeliveryDate) : undefined,
       targetWarehouseId: data.targetWarehouseId,
       wipWarehouseId: data.wipWarehouseId,
       sourceWarehouseId: data.sourceWarehouseId,
+      scrapWarehouseId: data.scrapWarehouseId,
       salesOrderId: data.salesOrderId,
+      productionPlanId: data.productionPlanId,
+      skipTransfer: data.skipTransfer ?? false,
+      useMultiLevelBom: data.useMultiLevelBom ?? true,
+      allowAlternativeItem: data.allowAlternativeItem ?? false,
+      projectId: data.projectId,
+      costCenterId: data.costCenterId,
+      description: data.description,
+      remarks: data.remarks,
     });
 
     revalidatePath('/manufacturing/work-orders');
@@ -330,11 +383,11 @@ export async function createWorkOrder(data: {
 }
 
 /**
- * Start work order
+ * Submit work order (start production)
  */
 export async function startWorkOrder(id: string): Promise<ActionResult> {
   try {
-    const workOrder = await WorkOrderService.start(id);
+    const workOrder = await WorkOrderService.submit(id);
 
     revalidatePath('/manufacturing/work-orders');
     revalidatePath(`/manufacturing/work-orders/${id}`);
@@ -350,17 +403,24 @@ export async function startWorkOrder(id: string): Promise<ActionResult> {
 }
 
 /**
- * Complete work order
+ * Complete work order production
  */
-export async function completeWorkOrder(id: string): Promise<ActionResult> {
+export async function completeWorkOrder(id: string, quantity?: number): Promise<ActionResult> {
   try {
-    const workOrder = await WorkOrderService.complete(id);
+    const workOrder = await WorkOrderService.getById(id);
+    const remainingQty = workOrder.quantity - workOrder.producedQty;
+
+    await WorkOrderService.completeProduction({
+      workOrderId: id,
+      quantity: quantity || remainingQty,
+      postingDate: new Date(),
+    });
 
     revalidatePath('/manufacturing/work-orders');
     revalidatePath(`/manufacturing/work-orders/${id}`);
     revalidatePath('/inventory/items');
 
-    return { success: true, data: workOrder };
+    return { success: true, data: await WorkOrderService.getById(id) };
   } catch (error) {
     console.error('[completeWorkOrder] Error:', error);
     return {
@@ -432,7 +492,11 @@ export async function listJobCards(options?: {
  */
 export async function startJobCard(id: string, employeeId?: string): Promise<ActionResult> {
   try {
-    const jobCard = await JobCardService.start(id, employeeId);
+    const jobCard = await JobCardService.start({
+      jobCardId: id,
+      employeeId,
+      startTime: new Date(),
+    });
 
     revalidatePath('/manufacturing/job-cards');
     revalidatePath(`/manufacturing/job-cards/${id}`);
@@ -453,10 +517,15 @@ export async function startJobCard(id: string, employeeId?: string): Promise<Act
 export async function completeJobCard(
   id: string,
   completedQty: number,
-  rejectedQty?: number
+  processLossQty?: number
 ): Promise<ActionResult> {
   try {
-    const jobCard = await JobCardService.complete(id, completedQty, rejectedQty);
+    const jobCard = await JobCardService.complete({
+      jobCardId: id,
+      completedQty,
+      endTime: new Date(),
+      processLossQty,
+    });
 
     revalidatePath('/manufacturing/job-cards');
     revalidatePath(`/manufacturing/job-cards/${id}`);
@@ -512,16 +581,21 @@ export async function listProductionPlans(options?: {
  * Create production plan
  */
 export async function createProductionPlan(data: {
-  planName: string;
   postingDate: string;
-  fromDate: string;
-  toDate: string;
+  planningDate?: string;
+  getItemsFrom?: 'Sales Order' | 'Material Request' | 'Manual';
+  forWarehouseId?: string;
   items: Array<{
     itemId: string;
     bomId: string;
     plannedQty: number;
-    warehouseId: string;
     plannedStartDate: string;
+    makeOrBuy?: 'Make' | 'Buy';
+    warehouseId?: string;
+    salesOrderId?: string;
+    salesOrderItemId?: string;
+    materialRequestId?: string;
+    materialRequestItemId?: string;
   }>;
 }): Promise<ActionResult> {
   try {
@@ -532,13 +606,27 @@ export async function createProductionPlan(data: {
 
     const plan = await ProductionPlanService.create({
       orgId,
-      planName: data.planName,
       postingDate: new Date(data.postingDate),
-      fromDate: new Date(data.fromDate),
-      toDate: new Date(data.toDate),
+      planningDate: data.planningDate ? new Date(data.planningDate) : new Date(data.postingDate),
+      getItemsFrom: data.getItemsFrom ?? 'Manual',
+      includeNonStockItems: false,
+      includeSubcontractedItems: false,
+      ignoreProcurementLeadTime: false,
+      ignoreExistingOrderedQty: false,
+      ignoreExistingProjectedQty: false,
+      includeSafetyStock: true,
+      forWarehouseId: data.forWarehouseId,
       items: data.items.map(item => ({
-        ...item,
+        itemId: item.itemId,
+        bomId: item.bomId,
+        plannedQty: item.plannedQty,
         plannedStartDate: new Date(item.plannedStartDate),
+        makeOrBuy: item.makeOrBuy ?? 'Make',
+        warehouseId: item.warehouseId,
+        salesOrderId: item.salesOrderId,
+        salesOrderItemId: item.salesOrderItemId,
+        materialRequestId: item.materialRequestId,
+        materialRequestItemId: item.materialRequestItemId,
       })),
     });
 
@@ -557,12 +645,23 @@ export async function createProductionPlan(data: {
 /**
  * Generate work orders from production plan
  */
-export async function generateWorkOrdersFromPlan(planId: string): Promise<ActionResult> {
+export async function generateWorkOrdersFromPlan(data: {
+  productionPlanId: string;
+  items: Array<{
+    productionPlanItemId: string;
+    quantity?: number;
+    wipWarehouseId?: string;
+    targetWarehouseId?: string;
+  }>;
+}): Promise<ActionResult> {
   try {
-    const workOrders = await ProductionPlanService.generateWorkOrders(planId);
+    const workOrders = await ProductionPlanService.createWorkOrders({
+      productionPlanId: data.productionPlanId,
+      items: data.items,
+    });
 
     revalidatePath('/manufacturing/production-plans');
-    revalidatePath(`/manufacturing/production-plans/${planId}`);
+    revalidatePath(`/manufacturing/production-plans/${data.productionPlanId}`);
     revalidatePath('/manufacturing/work-orders');
 
     return { success: true, data: workOrders };

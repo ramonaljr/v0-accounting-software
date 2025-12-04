@@ -365,6 +365,7 @@ export class JournalEntryService {
       costCenterId: account.costCenterId,
       projectId: account.projectId,
       isOpening: journalEntry.voucherType === 'Opening Entry',
+      isAdvance: false,
       remarks: account.description || journalEntry.description,
     }));
 

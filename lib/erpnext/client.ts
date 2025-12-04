@@ -39,7 +39,7 @@ export async function erpnextFetch<T = unknown>(
   if (contentType.includes("application/json")) {
     return res.json();
   }
-  return res.text();
+  return res.text() as Promise<T>;
 }
 
 export async function whoAmI() {
