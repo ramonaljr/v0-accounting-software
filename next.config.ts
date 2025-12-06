@@ -1,12 +1,6 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  eslint: {
-    // Warning: This allows production builds to successfully complete even if
-    // your project has ESLint errors.
-    ignoreDuringBuilds: true,
-  },
-
   // Performance optimizations
   compress: true,
   poweredByHeader: false,
@@ -92,10 +86,10 @@ const nextConfig: NextConfig = {
             },
           },
         },
-      };
+      }
     }
-    return config;
+    return config
   },
-};
+}
 
-export default nextConfig;
+export default nextConfig

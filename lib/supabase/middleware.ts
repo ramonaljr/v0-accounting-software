@@ -2,16 +2,16 @@ import { createServerClient } from '@supabase/ssr'
 import { type NextRequest, NextResponse } from 'next/server'
 
 /**
- * Middleware for handling Supabase authentication and session refresh.
- * This middleware ensures that user sessions are kept fresh across page navigations.
+ * Proxy handler for Supabase authentication and session refresh.
+ * This ensures that user sessions are kept fresh across page navigations.
  *
- * Place this in your middleware.ts file at the root of your project.
+ * Place this in your proxy.ts file at the root of your project.
  *
  * @example
  * ```ts
  * import { updateSession } from '@/lib/supabase/middleware'
  *
- * export async function middleware(request: NextRequest) {
+ * export async function proxy(request: NextRequest) {
  *   return await updateSession(request)
  * }
  *
@@ -36,9 +36,7 @@ export async function updateSession(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            request.cookies.set(name, value)
-          )
+          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
           supabaseResponse = NextResponse.next({
             request,
           })
